@@ -183,8 +183,10 @@ extension ContentView {
                 output += "\nExit status: \(finishedProcess.terminationStatus)"
                 updateScanProgress(from: output)
                 status = finishedProcess.terminationStatus == 0 ? "Completed" : "Exited with errors"
-                hosts = parsedHosts
-                selectedHostID = parsedHosts.first?.id
+                applyLiveHosts(parsedHosts)
+                if selectedHostID == nil {
+                    selectedHostID = parsedHosts.first?.id
+                }
                 if finishedProcess.terminationStatus == 0 {
                     addSavedScan(title: trimmedTarget, command: lastCommand, xmlPath: xmlURL.path, parsedHosts: parsedHosts)
                 }
@@ -326,6 +328,7 @@ extension ContentView {
                     appendBufferedScanOutput(newTextAndOffset.text)
                 }
 
+                applyLiveHosts(mergeScanHosts(parseNmapXML(at: xmlURL), parseLiveOutputHosts(from: output)))
                 try await Task.sleep(nanoseconds: 750_000_000)
             }
 
@@ -347,8 +350,10 @@ extension ContentView {
 
             status = succeeded ? "Completed" : "Privileged scan exited with errors"
             exitStatus = Int32(realExitStatus)
-            hosts = parsedHosts
-            selectedHostID = parsedHosts.first?.id
+            applyLiveHosts(parsedHosts)
+            if selectedHostID == nil {
+                selectedHostID = parsedHosts.first?.id
+            }
 
             if succeeded {
                 addSavedScan(
@@ -385,8 +390,10 @@ extension ContentView {
 
             status = "Privileged scan failed"
             exitStatus = 1
-            hosts = parsedHosts
-            selectedHostID = parsedHosts.first?.id
+            applyLiveHosts(parsedHosts)
+            if selectedHostID == nil {
+                selectedHostID = parsedHosts.first?.id
+            }
             scanProgressPercent = nil
             isUsingEstimatedScanProgress = false
             scanProgressMessage = ""

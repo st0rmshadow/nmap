@@ -72,6 +72,7 @@ extension ContentView {
         }
         .onReceive(elapsedTimer) { _ in
             updateScanElapsedTime()
+            refreshLiveHostsFromXMLIfNeeded()
         }
         .onReceive(NotificationCenter.default.publisher(for: .zenmapOpenXML)) { _ in
             guard !isRunning else {

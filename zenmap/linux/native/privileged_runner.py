@@ -17,6 +17,21 @@ class PrivilegedRunnerError(RuntimeError):
     pass
 
 
+def _xml_output_paths(arguments: list[str]) -> list[str]:
+    paths: list[str] = []
+    index = 0
+    while index < len(arguments):
+        argument = arguments[index]
+        if argument == "-oX" and index + 1 < len(arguments):
+            paths.append(arguments[index + 1])
+            index += 2
+            continue
+        if argument.startswith("-oX") and len(argument) > 3:
+            paths.append(argument[3:])
+        index += 1
+    return paths
+
+
 def _build_wrapper(
     nmap_binary: str,
     arguments: list[str],
@@ -27,14 +42,23 @@ def _build_wrapper(
 ) -> str:
     command = " ".join(shell_escape(part) for part in [nmap_binary, *arguments])
     nmapdir = shell_escape(resolve_nmap_data_directory(nmap_binary))
+    # Root-created XML under /tmp may be mode 0600; make it readable for the UI.
+    chmod_xml = " ".join(
+        f"chmod a+r {shell_escape(path)} 2>/dev/null || true;"
+        for path in _xml_output_paths(arguments)
+    )
     return (
+        f"umask 022; "
         f"rm -f {shell_escape(status_path)} {shell_escape(done_path)} {shell_escape(child_pid_path)}; "
         f"NMAPDIR={nmapdir}; export NMAPDIR; "
         f'trap \'kill "$child" 2>/dev/null; sleep 1; kill -9 "$child" 2>/dev/null; '
         f'echo 130 > {shell_escape(status_path)}; touch {shell_escape(done_path)}; exit 130\' TERM INT; '
         f"{command} > {shell_escape(log_path)} 2>&1 & "
         f'child=$!; echo "$child" > {shell_escape(child_pid_path)}; '
-        f'wait "$child"; code=$?; echo "$code" > {shell_escape(status_path)}; '
+        # Keep XML readable while nmap is still writing it.
+        f"( while kill -0 \"$child\" 2>/dev/null; do {chmod_xml} sleep 1; done ) & "
+        f'wait "$child"; code=$?; {chmod_xml} '
+        f'echo "$code" > {shell_escape(status_path)}; '
         f"touch {shell_escape(done_path)}; exit $code"
     )
 

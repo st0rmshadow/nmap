@@ -15,6 +15,7 @@ The stack is intentionally Qt-free:
 - Target/profile/arguments scan form with live command preview
 - Live nmap stdout output and progress footer
 - Hosts, ports, services, and details result views with filtering
+- Live Hosts/Ports/Services updates while a scan is running (partial XML)
 - Topology map for the current scan
 - Saved scan history under XDG config
 - Scan comparison between saved scans
@@ -105,3 +106,7 @@ Scans that need raw sockets (`-sS`, `-sU`, `-A`, etc.) trigger a Zenmap
 confirmation dialog first, then `pkexec` launches a root wrapper around nmap.
 Stopping a privileged scan uses the same wrapper PID tracking approach as the
 macOS native app.
+
+XML output paths are allocated without pre-creating the file. A user-owned
+`0600` file under `/tmp` cannot be written by root on modern Linux because of
+`fs.protected_regular`; letting nmap create the file avoids that failure.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable, Optional
@@ -28,7 +29,12 @@ from .privileged_runner import (
 from .scan_privilege import privilege_requirement
 from .scan_progress import ScanProgressTracker
 from .shell_utils import shell_escape, shell_split, split_targets
-from .xml_parsing import parse_nmap_xml
+from .xml_parsing import (
+    hosts_fingerprint,
+    merge_scan_hosts,
+    parse_live_output_hosts,
+    parse_nmap_xml,
+)
 
 OutputCallback = Callable[[str], None]
 StatusCallback = Callable[[str], None]
@@ -71,6 +77,9 @@ class ScanRunner:
         self._privileged_status_path: Optional[str] = None
         self._privileged_done_path: Optional[str] = None
         self._privileged_log_offset = 0
+        self._live_refresh_id: Optional[int] = None
+        self._live_hosts_fingerprint: object | None = None
+        self._live_output_text = ""
         self._xml_path: Optional[str] = None
         self._started_at: Optional[datetime] = None
         self._command_preview = ""
@@ -115,9 +124,13 @@ class ScanRunner:
         if request.auto_add_verbose and not _contains_verbose_flag(args):
             args.append("-v")
 
-        fd, xml_path = tempfile.mkstemp(prefix="zenmap-", suffix=".xml")
-        os.close(fd)
+        # Allocate a path without creating the file. Pre-creating a user-owned
+        # 0600 file under /tmp breaks privileged scans: Linux fs.protected_regular
+        # blocks root from writing files it does not own in sticky dirs.
+        xml_path = os.path.join(tempfile.gettempdir(), f"zenmap-{uuid.uuid4().hex}.xml")
         self._xml_path = xml_path
+        self._live_output_text = ""
+        self._live_hosts_fingerprint = None
         args.extend(["-oX", xml_path, *targets])
 
         privilege = privilege_requirement(args)
@@ -190,6 +203,7 @@ class ScanRunner:
             self._on_stdout_line,
             stream,
         )
+        self._start_live_host_refresh()
 
     def _run_privileged_scan(self, args: list[str], xml_path: str, binary: str, reason: str) -> None:
         self._command_preview = " ".join(shell_escape(part) for part in [binary, *args])
@@ -227,6 +241,7 @@ class ScanRunner:
         self._on_output(f"Privileged output log: {log_path}\n")
         self._on_output(f"Privileged wrapper PID: {wrapper_pid}\n\n")
         self._privileged_poll_id = GLib.timeout_add(750, self._poll_privileged_scan, xml_path)
+        self._start_live_host_refresh()
 
     def _poll_privileged_scan(self, xml_path: str) -> bool:
         if self._privileged_log_path:
@@ -235,6 +250,7 @@ class ScanRunner:
                 self._privileged_log_offset,
             )
             if text:
+                self._ingest_live_output(text)
                 self._on_output(text)
                 self._emit_progress(text)
 
@@ -247,6 +263,7 @@ class ScanRunner:
         )
 
         if not done_file_exists and wrapper_running:
+            self._publish_hosts_from_xml(live=True)
             return True
 
         if self._privileged_log_path:
@@ -255,6 +272,7 @@ class ScanRunner:
                 self._privileged_log_offset,
             )
             if text:
+                self._ingest_live_output(text)
                 self._on_output(text)
                 self._emit_progress(text)
 
@@ -283,8 +301,10 @@ class ScanRunner:
             self._finish_scan(self._read_exit_status())
             return
 
-        self._on_output(line + "\n")
-        self._emit_progress(line + "\n")
+        text = line + "\n"
+        self._ingest_live_output(text)
+        self._on_output(text)
+        self._emit_progress(text)
         data_input.read_line_async(
             GLib.PRIORITY_DEFAULT,
             None,
@@ -308,11 +328,11 @@ class ScanRunner:
         if self._privileged_poll_id is not None:
             GLib.source_remove(self._privileged_poll_id)
             self._privileged_poll_id = None
+        self._stop_live_host_refresh()
 
         self._process = None
         self._privileged_wrapper_pid = None
-        hosts = parse_nmap_xml(self._xml_path) if self._xml_path else []
-        self._on_hosts(hosts)
+        self._publish_hosts_from_xml(live=False)
         self._on_output(f"\nExit status: {exit_status}\n")
 
         if exit_status == 0:
@@ -322,6 +342,37 @@ class ScanRunner:
             self._on_status(f"Failed ({exit_status})")
             self._on_lifecycle(ZenmapScanLifecycleState.FAILED, exit_status)
 
+    def _start_live_host_refresh(self) -> None:
+        if self._live_refresh_id is not None:
+            return
+        self._live_refresh_id = GLib.timeout_add(750, self._on_live_host_refresh)
+
+    def _stop_live_host_refresh(self) -> None:
+        if self._live_refresh_id is not None:
+            GLib.source_remove(self._live_refresh_id)
+            self._live_refresh_id = None
+
+    def _on_live_host_refresh(self) -> bool:
+        if not self.is_running:
+            self._live_refresh_id = None
+            return False
+        self._publish_hosts_from_xml(live=True)
+        return True
+
+    def _ingest_live_output(self, text: str) -> None:
+        if not text:
+            return
+        self._live_output_text += text
+
+    def _publish_hosts_from_xml(self, *, live: bool) -> None:
+        xml_hosts = parse_nmap_xml(self._xml_path) if self._xml_path else []
+        live_hosts = parse_live_output_hosts(self._live_output_text)
+        hosts = merge_scan_hosts(xml_hosts, live_hosts)
+        fingerprint = hosts_fingerprint(hosts)
+        if live and fingerprint == self._live_hosts_fingerprint:
+            return
+        self._live_hosts_fingerprint = fingerprint
+        self._on_hosts(hosts)
 
     def _emit_progress(self, text: str) -> None:
         if self._progress_tracker is None or self._on_progress is None:

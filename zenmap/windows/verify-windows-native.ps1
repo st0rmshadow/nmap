@@ -8,7 +8,7 @@ Write-Host "Restoring WinUI project..."
 dotnet restore $Project
 
 Write-Host "Building WinUI project (Release)..."
-dotnet build $Project -c Release --no-restore
+dotnet build $Project -c Release -r win-x64 --no-restore
 
 $OutputDir = Join-Path $PSScriptRoot "native\bin\Release\net8.0-windows10.0.19041.0\win-x64"
 $ExePath = Join-Path $OutputDir "Zenmap.exe"

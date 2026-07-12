@@ -75,10 +75,7 @@ FunctionEnd
 
 !macro SecZenmapFiles
   ${_File} ${STAGE_DIR} ZENMAP_README
-  ${_File} ${STAGE_DIR} COPYING_HIGWIDGETS
   ${_Dir} ${STAGE_DIR} zenmap
-  ; always remove Zenmap.lnk
-  ; It'll be created by the installer after this.
   Delete "$INSTDIR\Zenmap.lnk"
 !macroend
 

@@ -1,0 +1,147 @@
+using Zenmap.Windows.Models;
+
+namespace Zenmap.Windows.Services;
+
+public sealed class ScanHistoryStore
+{
+    public List<SavedScan> SavedScans { get; private set; }
+
+    public ScanHistoryStore()
+    {
+        SavedScans = Load();
+    }
+
+    public SavedScan AddScan(string title, string command, string xmlPath, IReadOnlyList<ScannedHost> hosts)
+    {
+        var destination = Path.Combine(WindowsPaths.SavedScansDirectory, $"{Guid.NewGuid()}.xml");
+        File.Copy(xmlPath, destination, overwrite: true);
+        var savedScan = new SavedScan
+        {
+            Title = title,
+            Command = command,
+            XmlPath = destination,
+            ScannedAt = DateTimeOffset.Now,
+            HostCount = hosts.Count,
+            PortCount = hosts.Sum(host => host.Ports.Count),
+        };
+        SavedScans.Insert(0, savedScan);
+        Save();
+        return savedScan;
+    }
+
+    public SavedScan ImportXml(string title, string command, string xmlPath, IReadOnlyList<ScannedHost> hosts)
+    {
+        var destination = Path.Combine(WindowsPaths.SavedScansDirectory, $"{Guid.NewGuid()}.xml");
+        File.Copy(xmlPath, destination, overwrite: true);
+        var scannedAt = File.Exists(xmlPath)
+            ? new DateTimeOffset(File.GetLastWriteTime(xmlPath))
+            : DateTimeOffset.Now;
+        var savedScan = new SavedScan
+        {
+            Title = string.IsNullOrWhiteSpace(title) ? Path.GetFileNameWithoutExtension(xmlPath) : title,
+            Command = string.IsNullOrWhiteSpace(command) ? $"nmap (imported) {Path.GetFileName(xmlPath)}" : command,
+            XmlPath = destination,
+            ScannedAt = scannedAt,
+            HostCount = hosts.Count,
+            PortCount = hosts.Sum(host => host.Ports.Count),
+        };
+        SavedScans.Insert(0, savedScan);
+        Save();
+        return savedScan;
+    }
+
+    public void RemoveScan(Guid scanId, bool deleteFile = true)
+    {
+        var remaining = new List<SavedScan>();
+        foreach (var scan in SavedScans)
+        {
+            if (scan.Id == scanId)
+            {
+                if (deleteFile)
+                {
+                    TryDelete(scan.XmlPath);
+                }
+
+                continue;
+            }
+
+            remaining.Add(scan);
+        }
+
+        SavedScans = remaining;
+        Save();
+    }
+
+    public void Clear(bool deleteFiles = true)
+    {
+        if (deleteFiles)
+        {
+            foreach (var scan in SavedScans)
+            {
+                TryDelete(scan.XmlPath);
+            }
+        }
+
+        SavedScans = [];
+        Save();
+    }
+
+    public void UpdateScanMetadata(Guid scanId, string notes, string tags)
+    {
+        var index = SavedScans.FindIndex(scan => scan.Id == scanId);
+        if (index < 0)
+        {
+            return;
+        }
+
+        var scan = SavedScans[index];
+        SavedScans[index] = new SavedScan
+        {
+            Id = scan.Id,
+            Title = scan.Title,
+            Command = scan.Command,
+            XmlPath = scan.XmlPath,
+            ScannedAt = scan.ScannedAt,
+            HostCount = scan.HostCount,
+            PortCount = scan.PortCount,
+            Notes = notes,
+            Tags = tags,
+        };
+        Save();
+    }
+
+    private List<SavedScan> Load()
+    {
+        var raw = JsonSerialization.ReadJsonFile(WindowsPaths.SavedScansIndexPath, "[]");
+        try
+        {
+            return JsonSerialization.DecodeSavedScans(raw)
+                .Where(scan => File.Exists(scan.XmlPath))
+                .ToList();
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
+    private void Save() =>
+        JsonSerialization.WriteJsonFile(WindowsPaths.SavedScansIndexPath, JsonSerialization.EncodeSavedScans(SavedScans));
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
+}

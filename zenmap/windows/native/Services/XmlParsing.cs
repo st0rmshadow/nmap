@@ -58,7 +58,7 @@ public static class XmlParsing
             Address = address,
             Hostname = hostname,
             Status = status,
-            Ports = ports,
+            Ports = ports.ToList(),
         };
     }
 

@@ -25,6 +25,9 @@ public sealed class ScanRunner : IDisposable
     private System.Diagnostics.Process? _process;
     private PrivilegedScanHandle? _privilegedHandle;
     private System.Threading.Timer? _privilegedPollTimer;
+    private System.Threading.Timer? _liveRefreshTimer;
+    private string? _liveHostsFingerprint;
+    private string _liveOutputText = "";
     private string? _xmlPath;
     private ScanProgressTracker? _progressTracker;
 
@@ -87,6 +90,8 @@ public sealed class ScanRunner : IDisposable
         }
 
         _xmlPath = Path.Combine(Path.GetTempPath(), $"zenmap-{Guid.NewGuid():N}.xml");
+        _liveOutputText = "";
+        _liveHostsFingerprint = null;
         args.Add("-oX");
         args.Add(_xmlPath);
         args.AddRange(targets);
@@ -138,6 +143,7 @@ public sealed class ScanRunner : IDisposable
 
     public void Dispose()
     {
+        StopLiveHostRefresh();
         _privilegedPollTimer?.Dispose();
         if (_process is { HasExited: false })
         {
@@ -195,22 +201,27 @@ public sealed class ScanRunner : IDisposable
         {
             if (!string.IsNullOrEmpty(argsEvent.Data))
             {
-                PostOutput(argsEvent.Data + "\n");
-                EmitProgress(argsEvent.Data + "\n");
+                var text = argsEvent.Data + "\n";
+                IngestLiveOutput(text);
+                PostOutput(text);
+                EmitProgress(text);
             }
         };
         _process.ErrorDataReceived += (_, argsEvent) =>
         {
             if (!string.IsNullOrEmpty(argsEvent.Data))
             {
-                PostOutput(argsEvent.Data + "\n");
-                EmitProgress(argsEvent.Data + "\n");
+                var text = argsEvent.Data + "\n";
+                IngestLiveOutput(text);
+                PostOutput(text);
+                EmitProgress(text);
             }
         };
         _process.EnableRaisingEvents = true;
         _process.Exited += (_, _) => FinishScan(_process.ExitCode);
         _process.BeginOutputReadLine();
         _process.BeginErrorReadLine();
+        StartLiveHostRefresh();
     }
 
     private void RunPrivilegedScan(List<string> args, string xmlPath, string binary)
@@ -240,6 +251,7 @@ public sealed class ScanRunner : IDisposable
 
         PostOutput($"Privileged output log: {_privilegedHandle.LogPath}\n");
         PostOutput($"Privileged wrapper PID: {_privilegedHandle.WrapperProcessId}\n\n");
+        StartLiveHostRefresh();
 
         long offset = 0;
         _privilegedPollTimer = new System.Threading.Timer(_ =>
@@ -253,6 +265,7 @@ public sealed class ScanRunner : IDisposable
             offset = newOffset;
             if (!string.IsNullOrEmpty(text))
             {
+                IngestLiveOutput(text);
                 PostOutput(text);
                 EmitProgress(text);
             }
@@ -261,6 +274,7 @@ public sealed class ScanRunner : IDisposable
             var running = PrivilegedScanRunner.IsProcessRunning(_privilegedHandle.WrapperProcessId);
             if (!done && running)
             {
+                PublishHostsFromXml(live: true);
                 return;
             }
 
@@ -268,6 +282,7 @@ public sealed class ScanRunner : IDisposable
             offset = newOffset;
             if (!string.IsNullOrEmpty(text))
             {
+                IngestLiveOutput(text);
                 PostOutput(text);
                 EmitProgress(text);
             }
@@ -287,9 +302,9 @@ public sealed class ScanRunner : IDisposable
         _privilegedPollTimer?.Dispose();
         _privilegedPollTimer = null;
         _privilegedHandle = null;
+        StopLiveHostRefresh();
 
-        var hosts = !string.IsNullOrWhiteSpace(_xmlPath) ? XmlParsing.ParseNmapXml(_xmlPath!) : Array.Empty<ScannedHost>();
-        PostHosts(hosts);
+        PublishHostsFromXml(live: false);
         PostOutput($"\nExit status: {exitStatus}\n");
 
         if (exitStatus == 0)
@@ -302,6 +317,56 @@ public sealed class ScanRunner : IDisposable
             PostStatus($"Failed ({exitStatus})");
             PostLifecycle(ZenmapScanLifecycleState.Failed, exitStatus);
         }
+    }
+
+    private void StartLiveHostRefresh()
+    {
+        _liveRefreshTimer?.Dispose();
+        _liveRefreshTimer = new System.Threading.Timer(
+            _ =>
+            {
+                if (!IsRunning)
+                {
+                    StopLiveHostRefresh();
+                    return;
+                }
+
+                PublishHostsFromXml(live: true);
+            },
+            null,
+            TimeSpan.FromMilliseconds(750),
+            TimeSpan.FromMilliseconds(750));
+    }
+
+    private void StopLiveHostRefresh()
+    {
+        _liveRefreshTimer?.Dispose();
+        _liveRefreshTimer = null;
+    }
+
+    private void IngestLiveOutput(string text)
+    {
+        if (!string.IsNullOrEmpty(text))
+        {
+            _liveOutputText += text;
+        }
+    }
+
+    private void PublishHostsFromXml(bool live)
+    {
+        var xmlHosts = !string.IsNullOrWhiteSpace(_xmlPath)
+            ? XmlParsing.ParseNmapXml(_xmlPath!)
+            : Array.Empty<ScannedHost>();
+        var liveHosts = XmlParsing.ParseLiveOutputHosts(_liveOutputText);
+        var hosts = XmlParsing.MergeScanHosts(xmlHosts, liveHosts);
+        var fingerprint = XmlParsing.HostsFingerprint(hosts);
+        if (live && fingerprint == _liveHostsFingerprint)
+        {
+            return;
+        }
+
+        _liveHostsFingerprint = fingerprint;
+        PostHosts(hosts);
     }
 
     private void EmitProgress(string text)

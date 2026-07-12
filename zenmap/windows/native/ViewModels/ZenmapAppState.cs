@@ -239,7 +239,17 @@ public sealed class ZenmapAppState
 
     private void SetHosts(IReadOnlyList<ScannedHost> hosts)
     {
+        var previousAddress = SelectedHost?.Address;
         Hosts = hosts.ToList();
+        if (!string.IsNullOrWhiteSpace(previousAddress))
+        {
+            SelectedHost = Hosts.FirstOrDefault(host => host.Address == previousAddress);
+        }
+        else if (SelectedHost is not null && !Hosts.Contains(SelectedHost))
+        {
+            SelectedHost = Hosts.FirstOrDefault();
+        }
+
         NotifyChanged();
     }
 

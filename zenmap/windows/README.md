@@ -11,6 +11,7 @@ Native Windows GUI for Zenmap, parallel to:
 - Live nmap output and progress footer
 - UAC elevation for privileged scans (`-sS`, `-sU`, `-A`, etc.)
 - Hosts, ports, services, and details result views with filtering
+- Live Hosts/Ports/Services updates while a scan is running (partial XML)
 - Topology map for the current scan
 - Saved scan history under `%LOCALAPPDATA%\zenmap-native\`
 - Scan comparison between saved scans

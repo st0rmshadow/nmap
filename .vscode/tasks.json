@@ -1,0 +1,37 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "zenmap-macos: verify",
+      "type": "shell",
+      "command": "./zenmap/macos/verify-macos-native.sh",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "test", "isDefault": true }
+    },
+    {
+      "label": "zenmap-linux: verify",
+      "type": "shell",
+      "command": "./zenmap/linux/verify-linux-native.sh",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "zenmap-windows: build",
+      "type": "shell",
+      "command": "dotnet build zenmap/windows/native/Zenmap.Windows.csproj -c Debug -r win-x64",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "zenmap-windows: verify",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File zenmap/windows/verify-windows-native.ps1",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile",
+      "group": "test"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+<Page
+    x:Class="Zenmap.Windows.Views.DetailsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer Padding="16">
+        <StackPanel Spacing="12">
+            <TextBlock x:Name="SummaryText" TextWrapping="WrapWholeWords" />
+            <TextBlock x:Name="ContextText" FontFamily="Consolas" TextWrapping="WrapWholeWords" />
+            <TextBlock Text="Selected host ports" Style="{ThemeResource SubtitleTextBlockStyle}" />
+            <ListView x:Name="PortsList" MinHeight="240" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

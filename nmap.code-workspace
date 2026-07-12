@@ -1,0 +1,9 @@
+{
+  "folders": [{ "path": "." }],
+  "settings": {
+    "files.exclude": {
+      "**/zenmap/windows/**/bin": true,
+      "**/zenmap/windows/**/obj": true
+    }
+  }
+}

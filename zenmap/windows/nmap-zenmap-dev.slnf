@@ -1,0 +1,9 @@
+{
+  "solution": {
+    "path": "..\\..\\mswin32\\nmap.sln",
+    "projects": [
+      "nmap.vcxproj",
+      "..\\zenmap\\windows\\native\\Zenmap.Windows.csproj"
+    ]
+  }
+}

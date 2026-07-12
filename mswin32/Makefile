@@ -4,6 +4,7 @@ SIGNTOOL := $(shell powershell.exe -NoProfile -WindowStyle Hidden -NonInteractiv
 NMAPDIR=..
 NMAPDIR_WIN=$(shell echo '$(NMAPDIR)' | sed 's|/cygdrive/\(.\)|\1:|;s|/|\\|g')
 ZENMAP_WINDIR=$(NMAPDIR)/zenmap/install_scripts/windows
+ZENMAP_NATIVE_PS1=$(NMAPDIR)/zenmap/windows/build-for-installer.ps1
 
 include make-vars.make
 export NPCAP_VERSION := $(shell ls npcap-*.exe | sed -e 's/npcap-\([0-9.]*\)[-oem]*\.exe/\1/' -e 'q')
@@ -68,11 +69,8 @@ stage-common: $(NMAPDIR)/CHANGELOG $(NMAPDIR)/LICENSE $(NMAPDIR)/nmap-mac-prefix
 # Install the ndiff batch file wrapper in the zip distribution.
 	cp $(NMAPDIR)/ndiff/ndiff.py nmap-$(NMAP_VERSION)/ndiff.py
 	cp python-wrap.bat nmap-$(NMAP_VERSION)/ndiff.bat
-	$(MAKE) -C $(ZENMAP_WINDIR)
-	rm -rf nmap-$(NMAP_VERSION)/zenmap
-	cp -R $(ZENMAP_WINDIR)/dist/zenmap-w64/mingw64 nmap-$(NMAP_VERSION)/zenmap
-	cp $(NMAPDIR)/zenmap/README nmap-$(NMAP_VERSION)/ZENMAP_README
-	cp $(NMAPDIR)/zenmap/COPYING_HIGWIDGETS nmap-$(NMAP_VERSION)
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File '$(NMAPDIR_WIN)\zenmap\windows\build-for-installer.ps1' -OutputDir '$(NMAPDIR_WIN)\mswin32\nmap-$(NMAP_VERSION)\zenmap'
+	cp $(NMAPDIR)/zenmap/windows/README.md nmap-$(NMAP_VERSION)/ZENMAP_README
 	cp $(NMAPDIR)/ndiff/README nmap-$(NMAP_VERSION)/NDIFF_README
 
 stage: stage-nmap stage-nmap-oem stage-common
@@ -93,8 +91,10 @@ stage-nmap-main: build-nmap${OEM_SUFFIX} nmap-$(NMAP_VERSION)${OEM_SUFFIX}/Unins
 	cp $(VCCONFIG)${OEM_SUFFIX}/nmap.exe nmap-$(NMAP_VERSION)${OEM_SUFFIX}/
 
 sign-files: nmap-$(NMAP_VERSION)-oem/nmap.exe nmap-$(NMAP_VERSION)/nmap.exe nmap-$(NMAP_VERSION)-oem/Uninstall.exe nmap-$(NMAP_VERSION)/Uninstall.exe nmap-$(NMAP_VERSION)/ncat.exe nmap-$(NMAP_VERSION)/nping.exe nmap-$(NMAP_VERSION)/libssh2.dll nmap-$(NMAP_VERSION)/libcrypto-3.dll nmap-$(NMAP_VERSION)/libssl-3.dll nmap-$(NMAP_VERSION)/zlibwapi.dll
-	# TODO: evaluate whether we should also sign the Python stuff for Zenmap, Ndiff
-	"$(SIGNTOOL)" $(SIGNTOOL_ARGS) $^ nmap-$(NMAP_VERSION)/zenmap/bin/* nmap-$(NMAP_VERSION)/zenmap/lib/gdk-pixbuf-2.0/*/loaders/*.dll
+	"$(SIGNTOOL)" $(SIGNTOOL_ARGS) $^
+	if test -f nmap-$(NMAP_VERSION)/zenmap/Zenmap.exe; then \
+		"$(SIGNTOOL)" $(SIGNTOOL_ARGS) nmap-$(NMAP_VERSION)/zenmap/Zenmap.exe nmap-$(NMAP_VERSION)/zenmap/*.dll; \
+	fi
 	touch sign-files
 
 bundle-nsis: sign-files
@@ -118,7 +118,6 @@ bundle-zip-main: sign-files
 	cp npcap-$(NPCAP_VERSION)${OEM_SUFFIX}.exe nmap-$(NMAP_VERSION)${OEM_SUFFIX}
 	zip -x nmap-$(NMAP_VERSION)${OEM_SUFFIX}/ZENMAP_README \
 	  nmap-$(NMAP_VERSION)${OEM_SUFFIX}/zenmap/\* \
-	  nmap-$(NMAP_VERSION)${OEM_SUFFIX}/COPYING_HIGWIDGETS \
 	  nmap-$(NMAP_VERSION)${OEM_SUFFIX}/Uninstall.exe \
 	  nmap-$(NMAP_VERSION)${OEM_SUFFIX}/icon1.ico \
 	  -r nmap-$(NMAP_VERSION)${OEM_SUFFIX}-win32.zip nmap-$(NMAP_VERSION)${OEM_SUFFIX}
@@ -129,5 +128,5 @@ LICENSE.formatted: $(NMAPDIR)/LICENSE
 
 clean:
 	cmd /c Build.bat Clean "$(VCCONFIG)${OEM_SUFFIX}"
-	$(MAKE) -C $(ZENMAP_WINDIR) clean
+	dotnet clean $(NMAPDIR)/zenmap/windows/native/Zenmap.Windows.csproj -c $(VCCONFIG) || true
 	rm -rf make-vars.make nmap-$(NMAP_VERSION) nmap-$(NMAP_VERSION)-oem Debug Release Release-oem msbuild.log LICENSE.formatted

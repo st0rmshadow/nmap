@@ -158,7 +158,7 @@ Function shortcutsPage
 FunctionEnd
 
 !macro writeZenmapShortcut _lnk
-  CreateShortcut `${_lnk}` "$INSTDIR\zenmap\bin\pythonw.exe" '-c "from zenmapGUI.App import run;run()"' "$INSTDIR\nmap.exe" 0 "" "" "Launch Zenmap, the Nmap GUI"
+  CreateShortcut `${_lnk}` "$INSTDIR\zenmap\Zenmap.exe" "" "$INSTDIR\nmap.exe" 0 "" "" "Launch Zenmap, the native Nmap GUI"
 !macroend
 Function makeShortcuts
   StrCmp $zenmapset "" skip
@@ -273,8 +273,6 @@ Section "Zenmap (GUI Frontend)" SecZenmap
   SetOutPath "$INSTDIR"
   SetOverwrite on
   !insertmacro SecZenmapFiles
-  WriteINIStr "$INSTDIR\zenmap\share\zenmap\config\zenmap.conf" paths nmap_command_path "$INSTDIR\nmap.exe"
-  WriteINIStr "$INSTDIR\zenmap\share\zenmap\config\zenmap.conf" paths ndiff_command_path "$INSTDIR\ndiff.bat"
   !insertmacro writeZenmapShortcut "$INSTDIR\Zenmap.lnk"
   StrCpy $zenmapset "true"
   ${If} ${Silent}
@@ -601,7 +599,7 @@ FunctionEnd
   LangString DESC_SecNewNpcap ${LANG_ENGLISH} "Opens npcap.com in your web browser so you can check for a newer version of Npcap."
   LangString DESC_SecPerfRegistryMods ${LANG_ENGLISH} "Modifies Windows registry values to improve TCP connect scan performance.  Recommended."
 !ifndef NMAP_OEM
-  LangString DESC_SecZenmap ${LANG_ENGLISH} "Installs Zenmap, the official Nmap graphical user interface.  Recommended."
+  LangString DESC_SecZenmap ${LANG_ENGLISH} "Installs Zenmap, the official native WinUI graphical front end for Nmap. Recommended."
   LangString DESC_SecNdiff ${LANG_ENGLISH} "Installs Ndiff, a tool for comparing Nmap XML files."
 !endif
   LangString DESC_SecNcat ${LANG_ENGLISH} "Installs Ncat, Nmap's Netcat replacement."
@@ -672,7 +670,7 @@ Section "Uninstall"
   Call un.SanityCheckInstdir
 
   IfFileExists $INSTDIR\nmap.exe nmap_installed
-  IfFileExists $INSTDIR\zenmap.exe nmap_installed
+  IfFileExists $INSTDIR\zenmap\Zenmap.exe nmap_installed
   IfFileExists $INSTDIR\ncat.exe nmap_installed
   IfFileExists $INSTDIR\nping.exe nmap_installed
   IfFileExists $INSTDIR\ndiff.exe nmap_installed

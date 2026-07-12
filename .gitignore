@@ -157,3 +157,9 @@ dist/
 packaging/rpm-build/
 packaging/deb-build/
 packaging/arch-build/
+
+# WinUI / .NET build artifacts
+zenmap/windows/**/bin/
+zenmap/windows/**/obj/
+zenmap/windows/.vs/
+zenmap/windows/**/*.user

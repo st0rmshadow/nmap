@@ -41,6 +41,53 @@ final class ScanHistoryStore: ObservableObject {
         }
     }
 
+    func persistSavedScan(id savedScanID: SavedScan.ID) -> Bool {
+        guard let index = savedScans.firstIndex(where: { $0.id == savedScanID }),
+              savedScans[index].ephemeral else {
+            return false
+        }
+
+        let scan = savedScans[index]
+        guard FileManager.default.fileExists(atPath: scan.xmlPath),
+              let destinationPath = copyXMLToSavedScansDirectory(sourcePath: scan.xmlPath, title: scan.title) else {
+            return false
+        }
+
+        deleteSavedScanFile(at: scan.xmlPath)
+        savedScans[index] = SavedScan(
+            id: scan.id,
+            title: scan.title,
+            command: scan.command,
+            xmlPath: destinationPath,
+            scannedAt: scan.scannedAt,
+            hostCount: scan.hostCount,
+            portCount: scan.portCount,
+            notes: scan.notes,
+            tags: scan.tags,
+            ephemeral: false
+        )
+        return true
+    }
+
+    func cleanupEphemeralScans() {
+        let remaining = savedScans.filter { scan in
+            if scan.ephemeral {
+                deleteSavedScanFile(at: scan.xmlPath)
+                return false
+            }
+            return true
+        }
+
+        savedScans = remaining
+        if let selectedSavedScanID,
+           !savedScans.contains(where: { $0.id == selectedSavedScanID }) {
+            self.selectedSavedScanID = nil
+        }
+        selectedSavedScanIDs = selectedSavedScanIDs.filter { id in
+            savedScans.contains(where: { $0.id == id })
+        }
+    }
+
     private func deleteSavedScanFile(at path: String) {
         guard FileManager.default.fileExists(atPath: path) else {
             return
@@ -59,10 +106,67 @@ final class ScanHistoryStore: ObservableObject {
     }
 
     private func saveSavedScans() {
-        guard let data = try? JSONEncoder().encode(savedScans) else {
+        let persistentScans = savedScans.filter { !$0.ephemeral }
+        guard let data = try? JSONEncoder().encode(persistentScans) else {
             return
         }
 
         UserDefaults.standard.set(data, forKey: Self.savedScansDefaultsKey)
+    }
+
+    private func copyXMLToSavedScansDirectory(sourcePath: String, title: String) -> String? {
+        let sourceURL = URL(fileURLWithPath: sourcePath)
+
+        guard FileManager.default.fileExists(atPath: sourceURL.path),
+              let savedScansDirectory = savedScansDirectoryURL() else {
+            return nil
+        }
+
+        do {
+            try FileManager.default.createDirectory(
+                at: savedScansDirectory,
+                withIntermediateDirectories: true
+            )
+
+            let filename = savedScanFilename(title: title, date: Date())
+            let destinationURL = savedScansDirectory.appendingPathComponent(filename)
+
+            if FileManager.default.fileExists(atPath: destinationURL.path) {
+                try FileManager.default.removeItem(at: destinationURL)
+            }
+
+            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+            return destinationURL.path
+        } catch {
+            return nil
+        }
+    }
+
+    private func savedScanFilename(title: String, date: Date) -> String {
+        let timestamp = ISO8601DateFormatter()
+            .string(from: date)
+            .replacingOccurrences(of: ":", with: "-")
+        let baseTitle = (title as NSString).deletingPathExtension
+        let safeTitle = baseTitle
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+            .replacingOccurrences(of: " ", with: "_")
+        let finalTitle = safeTitle.isEmpty ? "nmap-scan" : safeTitle
+
+        return "\(timestamp)-\(finalTitle).xml"
+    }
+
+    private func savedScansDirectoryURL() -> URL? {
+        guard let applicationSupportURL = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first else {
+            return nil
+        }
+
+        return applicationSupportURL
+            .appendingPathComponent("Zenmap", isDirectory: true)
+            .appendingPathComponent("SavedScans", isDirectory: true)
     }
 }

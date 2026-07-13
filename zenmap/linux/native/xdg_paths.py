@@ -26,6 +26,12 @@ def saved_scans_dir() -> Path:
     return path
 
 
+def session_scans_dir() -> Path:
+    path = zenmap_config_dir() / "session-scans"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def settings_path() -> Path:
     return zenmap_config_dir() / "settings.json"
 

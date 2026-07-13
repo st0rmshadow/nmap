@@ -14,6 +14,9 @@ struct ZenmapApp: App {
             ContentView()
                 .environmentObject(scanHistory)
                 .frame(minWidth: 1250, minHeight: 850)
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
+                    scanHistory.cleanupEphemeralScans()
+                }
         }
         .commands {
             NewWindowCommands()
@@ -206,6 +209,7 @@ struct ContentView: View {
     @AppStorage("Zenmap.AutoAddVerbose") var autoAddVerbose = true
     @AppStorage("Zenmap.AutoAddStatsEvery") var autoAddStatsEvery = true
     @AppStorage("Zenmap.StatsEveryValue") var statsEveryValue = "5s"
+    @AppStorage("Zenmap.SaveScansByDefault") var saveScansByDefault = true
     @AppStorage("Zenmap.DefaultTarget") var defaultTarget = "scanme.nmap.org"
     @AppStorage("Zenmap.DefaultProfileName") var defaultProfileName = "Service Detection"
 
@@ -266,6 +270,7 @@ struct ContentView: View {
     @State var nseScriptHelperMessage = ""
     @State var nseScriptArgsText = ""
     @State var nseScriptEntries: [NSEScriptEntry] = []
+    @State var showDisableSaveScansAlert = false
     
     init() {
         let savedCustomProfiles = Self.loadSavedCustomProfiles() ?? []

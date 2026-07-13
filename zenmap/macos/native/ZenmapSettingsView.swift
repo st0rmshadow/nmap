@@ -49,6 +49,21 @@ extension ContentView {
                         .labelsHidden()
                         .disabled(!autoAddStatsEvery)
                     }
+
+                    GridRow {
+                        Text("Saved scans")
+                            .foregroundStyle(.secondary)
+                        Toggle("Save scans by default", isOn: Binding(
+                            get: { saveScansByDefault },
+                            set: { newValue in
+                                if saveScansByDefault && !newValue {
+                                    showDisableSaveScansAlert = true
+                                } else {
+                                    saveScansByDefault = newValue
+                                }
+                            }
+                        ))
+                    }
                 }
                 .padding(.vertical, 4)
             }
@@ -105,5 +120,16 @@ extension ContentView {
             Spacer()
         }
         .padding()
+        .alert("Stop saving scans by default?", isPresented: $showDisableSaveScansAlert) {
+            Button("Disable Saving", role: .destructive) {
+                saveScansByDefault = false
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(
+                "Scans completed while this is disabled will only be kept for this session and deleted when Zenmap closes. "
+                    + "You can still save individual scans from Saved Scans."
+            )
+        }
     }
 }

@@ -25,6 +25,7 @@ class SavedScansView(Gtk.Box):
         on_delete_scan,
         on_clear_scans,
         on_save_metadata,
+        on_persist_scan,
     ) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         self._on_load_scan = on_load_scan
@@ -33,6 +34,7 @@ class SavedScansView(Gtk.Box):
         self._on_delete_scan = on_delete_scan
         self._on_clear_scans = on_clear_scans
         self._on_save_metadata = on_save_metadata
+        self._on_persist_scan = on_persist_scan
         self._scans: list[SavedScan] = []
         self._filter_text = ""
         self._store = Gio.ListStore.new(SavedScanRow)
@@ -66,17 +68,20 @@ class SavedScansView(Gtk.Box):
         self._open_button = Gtk.Button(label="Open XML")
         self._import_button = Gtk.Button(label="Import XML")
         self._delete_button = Gtk.Button(label="Delete")
+        self._persist_button = Gtk.Button(label="Save Scan")
         self._clear_button = Gtk.Button(label="Clear All")
         self._load_button.connect("clicked", lambda *_: self._load_selected())
         self._open_button.connect("clicked", lambda *_: self._open_selected())
         self._import_button.connect("clicked", lambda *_: self._on_import_xml())
         self._delete_button.connect("clicked", lambda *_: self._delete_selected())
+        self._persist_button.connect("clicked", lambda *_: self._persist_selected())
         self._clear_button.connect("clicked", lambda *_: self._on_clear_scans())
         for button in (
             self._load_button,
             self._open_button,
             self._import_button,
             self._delete_button,
+            self._persist_button,
             self._clear_button,
         ):
             actions.append(button)
@@ -141,7 +146,8 @@ class SavedScansView(Gtk.Box):
         self._load_button.set_sensitive(has_selection)
         self._open_button.set_sensitive(has_selection)
         self._delete_button.set_sensitive(has_selection)
-        self._save_metadata_button.set_sensitive(has_selection)
+        self._persist_button.set_sensitive(has_selection and scan is not None and scan.ephemeral)
+        self._save_metadata_button.set_sensitive(has_selection and scan is not None and not scan.ephemeral)
         if scan is not None:
             self._notes_entry.set_text(scan.notes)
             self._tags_entry.set_text(scan.tags)
@@ -163,6 +169,11 @@ class SavedScansView(Gtk.Box):
         scan = self.selected_scan()
         if scan is not None:
             self._on_delete_scan(scan)
+
+    def _persist_selected(self) -> None:
+        scan = self.selected_scan()
+        if scan is not None:
+            self._on_persist_scan(scan)
 
     def _save_metadata(self) -> None:
         scan = self.selected_scan()

@@ -23,6 +23,7 @@
                     <TextBlock Text="Scan Behavior" FontWeight="SemiBold" />
                     <ToggleSwitch x:Name="AutoVerboseSwitch" Header="Auto add -v" />
                     <ToggleSwitch x:Name="AutoStatsSwitch" Header="Auto add --stats-every" />
+                    <ToggleSwitch x:Name="SaveScansSwitch" Header="Save scans by default" />
                     <ComboBox x:Name="StatsEveryCombo" Header="Stats every" HorizontalAlignment="Left" MinWidth="160">
                         <ComboBoxItem Content="1s" />
                         <ComboBoxItem Content="5s" />

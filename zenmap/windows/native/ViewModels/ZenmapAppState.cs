@@ -31,6 +31,7 @@ public sealed class ZenmapAppState
     public event Action<string>? OutputAppended;
     public event Action? SavedScansChanged;
     public event Action? ProfilesChanged;
+    public event Action<AppSettings>? DisableSaveScansConfirmationRequested;
 
     public ZenmapAppState(DispatcherQueue dispatcher)
     {
@@ -167,7 +168,20 @@ public sealed class ZenmapAppState
         OutputAppended?.Invoke(OutputText);
     }
 
-    public void SaveSettings(AppSettings settings)
+    public void SaveSettings(AppSettings settings, bool confirmedDisableSaveScans = false)
+    {
+        if (SettingsStore.Settings.SaveScansByDefault
+            && !settings.SaveScansByDefault
+            && !confirmedDisableSaveScans)
+        {
+            DisableSaveScansConfirmationRequested?.Invoke(settings);
+            return;
+        }
+
+        ApplySettings(settings);
+    }
+
+    public void ApplySettings(AppSettings settings)
     {
         SettingsStore.Settings = settings;
         SettingsStore.Save();
@@ -196,10 +210,24 @@ public sealed class ZenmapAppState
     public void ImportXmlFile(string xmlPath)
     {
         var hosts = XmlParsing.ParseNmapXml(xmlPath);
-        ScanHistoryStore.ImportXml(Path.GetFileNameWithoutExtension(xmlPath), "", xmlPath, hosts);
+        var ephemeral = !SettingsStore.Settings.SaveScansByDefault;
+        ScanHistoryStore.ImportXml(Path.GetFileNameWithoutExtension(xmlPath), "", xmlPath, hosts, ephemeral);
         SavedScansChanged?.Invoke();
         LoadSavedScan(ScanHistoryStore.SavedScans[0]);
     }
+
+    public bool PersistSavedScan(Guid scanId)
+    {
+        if (!ScanHistoryStore.PersistScan(scanId))
+        {
+            return false;
+        }
+
+        SavedScansChanged?.Invoke();
+        return true;
+    }
+
+    public void CleanupEphemeralScans() => ScanHistoryStore.CleanupEphemeralScans();
 
     public void DeleteSavedScan(Guid scanId)
     {
@@ -315,7 +343,12 @@ public sealed class ZenmapAppState
         {
             LastXmlPath = _scanRunner.XmlPath;
             var title = $"{Target.Trim()} - {SelectedProfile.Name}";
-            ScanHistoryStore.AddScan(title, LastCommand, LastXmlPath, Hosts);
+            ScanHistoryStore.AddScan(
+                title,
+                LastCommand,
+                LastXmlPath,
+                Hosts,
+                ephemeral: !SettingsStore.Settings.SaveScansByDefault);
             SavedScansChanged?.Invoke();
         }
 

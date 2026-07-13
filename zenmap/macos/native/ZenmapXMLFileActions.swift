@@ -91,15 +91,30 @@ extension ContentView {
             selectedTab = "Hosts"
 
             let parsedPorts = parsedHosts.flatMap { $0.ports }
-            addSavedScan(title: url.lastPathComponent, command: "Opened XML file", xmlPath: url.path, parsedHosts: parsedHosts)
+            addSavedScan(
+                title: url.lastPathComponent,
+                command: "Opened XML file",
+                xmlPath: url.path,
+                parsedHosts: parsedHosts,
+                ephemeral: !saveScansByDefault
+            )
             output = "Opened XML: \(url.path)\n"
             output += "Parsed \(parsedHosts.count) host\(parsedHosts.count == 1 ? "" : "s").\n"
             output += "Parsed \(parsedPorts.count) port result\(parsedPorts.count == 1 ? "" : "s")."
         }
     }
     
-    func addSavedScan(title: String, command: String, xmlPath: String, parsedHosts: [ScannedHost]) {
-        let durableXMLPath = copyXMLToSavedScansDirectory(sourcePath: xmlPath, title: title) ?? xmlPath
+    func addSavedScan(
+        title: String,
+        command: String,
+        xmlPath: String,
+        parsedHosts: [ScannedHost],
+        ephemeral: Bool? = nil
+    ) {
+        let shouldBeEphemeral = ephemeral ?? !saveScansByDefault
+        let durableXMLPath = shouldBeEphemeral
+            ? (copyXMLToSessionScansDirectory(sourcePath: xmlPath, title: title) ?? xmlPath)
+            : (copyXMLToSavedScansDirectory(sourcePath: xmlPath, title: title) ?? xmlPath)
 
         let savedScan = SavedScan(
             title: title,
@@ -107,7 +122,8 @@ extension ContentView {
             xmlPath: durableXMLPath,
             scannedAt: Date(),
             hostCount: parsedHosts.count,
-            portCount: parsedHosts.flatMap { $0.ports }.count
+            portCount: parsedHosts.flatMap { $0.ports }.count,
+            ephemeral: shouldBeEphemeral
         )
 
         scanHistory.savedScans.removeAll { $0.xmlPath == durableXMLPath }
@@ -116,22 +132,39 @@ extension ContentView {
         scanHistory.selectedSavedScanIDs = [savedScan.id]
     }
 
+    func persistSelectedSavedScan() {
+        guard let selectedSavedScanID,
+              scanHistory.persistSavedScan(id: selectedSavedScanID) else {
+            return
+        }
+
+        output += "\nSaved scan permanently."
+    }
+
+    func copyXMLToSessionScansDirectory(sourcePath: String, title: String) -> String? {
+        copyXMLToDirectory(sourcePath: sourcePath, title: title, directoryURL: sessionScansDirectoryURL())
+    }
+
     func copyXMLToSavedScansDirectory(sourcePath: String, title: String) -> String? {
+        copyXMLToDirectory(sourcePath: sourcePath, title: title, directoryURL: savedScansDirectoryURL())
+    }
+
+    private func copyXMLToDirectory(sourcePath: String, title: String, directoryURL: URL?) -> String? {
         let sourceURL = URL(fileURLWithPath: sourcePath)
 
         guard FileManager.default.fileExists(atPath: sourceURL.path),
-              let savedScansDirectory = savedScansDirectoryURL() else {
+              let directoryURL else {
             return nil
         }
 
         do {
             try FileManager.default.createDirectory(
-                at: savedScansDirectory,
+                at: directoryURL,
                 withIntermediateDirectories: true
             )
 
             let filename = savedScanFilename(title: title, date: Date())
-            let destinationURL = savedScansDirectory.appendingPathComponent(filename)
+            let destinationURL = directoryURL.appendingPathComponent(filename)
 
             if FileManager.default.fileExists(atPath: destinationURL.path) {
                 try FileManager.default.removeItem(at: destinationURL)
@@ -158,6 +191,19 @@ extension ContentView {
         let finalTitle = safeTitle.isEmpty ? "nmap-scan" : safeTitle
 
         return "\(timestamp)-\(finalTitle).xml"
+    }
+
+    func sessionScansDirectoryURL() -> URL? {
+        guard let applicationSupportURL = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first else {
+            return nil
+        }
+
+        return applicationSupportURL
+            .appendingPathComponent("Zenmap", isDirectory: true)
+            .appendingPathComponent("SessionScans", isDirectory: true)
     }
 
     func savedScansDirectoryURL() -> URL? {

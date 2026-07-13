@@ -100,6 +100,14 @@ extension ContentView {
                 }
                 .help("Import Saved Scan History")
 
+                Button {
+                    persistSelectedSavedScan()
+                } label: {
+                    Image(systemName: "square.and.arrow.down.on.square")
+                }
+                .help("Save Scan Permanently")
+                .disabled(selectedSavedScan?.ephemeral != true)
+
                 Button(role: .destructive) {
                     deleteSelectedSavedScan()
                 } label: {
@@ -121,7 +129,7 @@ extension ContentView {
                             Text(scan.scannedAt.formatted(date: .abbreviated, time: .shortened))
                         }
                         TableColumn("Title") { scan in
-                            Text(scan.title)
+                            Text(scan.displayTitle)
                         }
                         TableColumn("Command") { scan in
                             Text(scan.command)

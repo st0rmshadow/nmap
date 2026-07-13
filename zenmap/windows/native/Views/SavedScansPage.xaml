@@ -43,7 +43,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="{Binding ScannedAtLocal}" Style="{StaticResource ZenmapDimTextStyle}" />
-                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="1" Text="{Binding DisplayTitle}" FontWeight="SemiBold" />
                         <TextBlock Grid.Column="2" Text="{Binding HostCount}" />
                         <TextBlock Grid.Column="3" Text="{Binding PortCount}" />
                         <TextBlock Grid.Column="4" Text="{Binding Command}" FontFamily="Consolas" TextTrimming="CharacterEllipsis" />
@@ -57,6 +57,7 @@
             <Button Content="Open XML" Click="OpenXmlButton_Click" />
             <Button Content="Import XML" Click="ImportXmlButton_Click" />
             <Button Content="Delete" Click="DeleteButton_Click" />
+            <Button x:Name="PersistScanButton" Content="Save Scan" Click="PersistScanButton_Click" />
             <Button Content="Clear All" Click="ClearButton_Click" />
         </StackPanel>
 

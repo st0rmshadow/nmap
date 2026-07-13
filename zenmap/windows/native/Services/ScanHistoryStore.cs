@@ -11,9 +11,15 @@ public sealed class ScanHistoryStore
         SavedScans = Load();
     }
 
-    public SavedScan AddScan(string title, string command, string xmlPath, IReadOnlyList<ScannedHost> hosts)
+    public SavedScan AddScan(
+        string title,
+        string command,
+        string xmlPath,
+        IReadOnlyList<ScannedHost> hosts,
+        bool ephemeral = false)
     {
-        var destination = Path.Combine(WindowsPaths.SavedScansDirectory, $"{Guid.NewGuid()}.xml");
+        var destinationDirectory = ephemeral ? WindowsPaths.SessionScansDirectory : WindowsPaths.SavedScansDirectory;
+        var destination = Path.Combine(destinationDirectory, $"{Guid.NewGuid()}.xml");
         File.Copy(xmlPath, destination, overwrite: true);
         var savedScan = new SavedScan
         {
@@ -23,15 +29,22 @@ public sealed class ScanHistoryStore
             ScannedAt = DateTimeOffset.Now,
             HostCount = hosts.Count,
             PortCount = hosts.Sum(host => host.Ports.Count),
+            Ephemeral = ephemeral,
         };
         SavedScans.Insert(0, savedScan);
         Save();
         return savedScan;
     }
 
-    public SavedScan ImportXml(string title, string command, string xmlPath, IReadOnlyList<ScannedHost> hosts)
+    public SavedScan ImportXml(
+        string title,
+        string command,
+        string xmlPath,
+        IReadOnlyList<ScannedHost> hosts,
+        bool ephemeral = false)
     {
-        var destination = Path.Combine(WindowsPaths.SavedScansDirectory, $"{Guid.NewGuid()}.xml");
+        var destinationDirectory = ephemeral ? WindowsPaths.SessionScansDirectory : WindowsPaths.SavedScansDirectory;
+        var destination = Path.Combine(destinationDirectory, $"{Guid.NewGuid()}.xml");
         File.Copy(xmlPath, destination, overwrite: true);
         var scannedAt = File.Exists(xmlPath)
             ? new DateTimeOffset(File.GetLastWriteTime(xmlPath))
@@ -44,10 +57,45 @@ public sealed class ScanHistoryStore
             ScannedAt = scannedAt,
             HostCount = hosts.Count,
             PortCount = hosts.Sum(host => host.Ports.Count),
+            Ephemeral = ephemeral,
         };
         SavedScans.Insert(0, savedScan);
         Save();
         return savedScan;
+    }
+
+    public bool PersistScan(Guid scanId)
+    {
+        var index = SavedScans.FindIndex(scan => scan.Id == scanId);
+        if (index < 0 || !SavedScans[index].Ephemeral)
+        {
+            return false;
+        }
+
+        var scan = SavedScans[index];
+        if (!File.Exists(scan.XmlPath))
+        {
+            return false;
+        }
+
+        var destination = Path.Combine(WindowsPaths.SavedScansDirectory, $"{Guid.NewGuid()}.xml");
+        File.Copy(scan.XmlPath, destination, overwrite: true);
+        TryDelete(scan.XmlPath);
+        SavedScans[index] = new SavedScan
+        {
+            Id = scan.Id,
+            Title = scan.Title,
+            Command = scan.Command,
+            XmlPath = destination,
+            ScannedAt = scan.ScannedAt,
+            HostCount = scan.HostCount,
+            PortCount = scan.PortCount,
+            Notes = scan.Notes,
+            Tags = scan.Tags,
+            Ephemeral = false,
+        };
+        Save();
+        return true;
     }
 
     public void RemoveScan(Guid scanId, bool deleteFile = true)
@@ -86,6 +134,24 @@ public sealed class ScanHistoryStore
         Save();
     }
 
+    public void CleanupEphemeralScans()
+    {
+        var remaining = new List<SavedScan>();
+        foreach (var scan in SavedScans)
+        {
+            if (scan.Ephemeral)
+            {
+                TryDelete(scan.XmlPath);
+                continue;
+            }
+
+            remaining.Add(scan);
+        }
+
+        SavedScans = remaining;
+        Save();
+    }
+
     public void UpdateScanMetadata(Guid scanId, string notes, string tags)
     {
         var index = SavedScans.FindIndex(scan => scan.Id == scanId);
@@ -106,6 +172,7 @@ public sealed class ScanHistoryStore
             PortCount = scan.PortCount,
             Notes = notes,
             Tags = tags,
+            Ephemeral = scan.Ephemeral,
         };
         Save();
     }

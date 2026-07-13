@@ -11,10 +11,12 @@ public static class WindowsPaths
     public static string SavedScansIndexPath => Path.Combine(ConfigRoot, "saved-scans.json");
     public static string CustomProfilesPath => Path.Combine(ConfigRoot, "custom-profiles.json");
     public static string SavedScansDirectory => Path.Combine(ConfigRoot, "saved-scans");
+    public static string SessionScansDirectory => Path.Combine(ConfigRoot, "session-scans");
 
     public static void EnsureConfigDirectories()
     {
         Directory.CreateDirectory(ConfigRoot);
         Directory.CreateDirectory(SavedScansDirectory);
+        Directory.CreateDirectory(SessionScansDirectory);
     }
 }

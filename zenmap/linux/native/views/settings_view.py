@@ -29,6 +29,7 @@ class SettingsView(Gtk.Box):
         self._stats_entry = Gtk.Entry()
         self._verbose_switch = Gtk.Switch()
         self._stats_switch = Gtk.Switch()
+        self._save_scans_switch = Gtk.Switch()
 
         rows = (
             ("Nmap binary", self._nmap_entry),
@@ -44,6 +45,8 @@ class SettingsView(Gtk.Box):
         grid.attach(self._stats_switch, 1, len(rows), 1, 1)
         grid.attach(Gtk.Label(label="Auto-add -v", xalign=0), 0, len(rows) + 1, 1, 1)
         grid.attach(self._verbose_switch, 1, len(rows) + 1, 1, 1)
+        grid.attach(Gtk.Label(label="Save scans by default", xalign=0), 0, len(rows) + 2, 1, 1)
+        grid.attach(self._save_scans_switch, 1, len(rows) + 2, 1, 1)
         self.append(grid)
 
         save_button = Gtk.Button(label="Save Settings")
@@ -60,6 +63,7 @@ class SettingsView(Gtk.Box):
         self._stats_entry.set_text(settings.stats_every_value)
         self._stats_switch.set_active(settings.auto_add_stats_every)
         self._verbose_switch.set_active(settings.auto_add_verbose)
+        self._save_scans_switch.set_active(settings.save_scans_by_default)
 
     def _save(self) -> None:
         settings = AppSettings(
@@ -69,5 +73,6 @@ class SettingsView(Gtk.Box):
             stats_every_value=self._stats_entry.get_text().strip() or "1s",
             auto_add_stats_every=self._stats_switch.get_active(),
             auto_add_verbose=self._verbose_switch.get_active(),
+            save_scans_by_default=self._save_scans_switch.get_active(),
         )
         self._on_save_settings(settings)

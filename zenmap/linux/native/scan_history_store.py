@@ -6,11 +6,11 @@ import json
 import shutil
 from datetime import datetime
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from .models import SavedScan, ScannedHost
 from .serialization import decode_saved_scans, encode_saved_scans, read_json_file, write_json_file
-from .xdg_paths import saved_scans_dir, saved_scans_index_path
+from .xdg_paths import saved_scans_dir, saved_scans_index_path, session_scans_dir
 
 
 class ScanHistoryStore:
@@ -23,8 +23,11 @@ class ScanHistoryStore:
         command: str,
         xml_path: str,
         hosts: list[ScannedHost],
+        *,
+        ephemeral: bool = False,
     ) -> SavedScan:
-        destination = saved_scans_dir() / f"{uuid4()}.xml"
+        destination_dir = session_scans_dir() if ephemeral else saved_scans_dir()
+        destination = destination_dir / f"{uuid4()}.xml"
         shutil.copy2(xml_path, destination)
         saved_scan = SavedScan(
             title=title,
@@ -33,6 +36,7 @@ class ScanHistoryStore:
             scanned_at=datetime.now(),
             host_count=len(hosts),
             port_count=sum(len(host.ports) for host in hosts),
+            ephemeral=ephemeral,
         )
         self.saved_scans.insert(0, saved_scan)
         self._save()
@@ -44,9 +48,12 @@ class ScanHistoryStore:
         command: str,
         xml_path: str,
         hosts: list[ScannedHost],
+        *,
+        ephemeral: bool = False,
     ) -> SavedScan:
         source = Path(xml_path)
-        destination = saved_scans_dir() / f"{uuid4()}.xml"
+        destination_dir = session_scans_dir() if ephemeral else saved_scans_dir()
+        destination = destination_dir / f"{uuid4()}.xml"
         shutil.copy2(source, destination)
         saved_scan = SavedScan(
             title=title or source.stem,
@@ -55,10 +62,39 @@ class ScanHistoryStore:
             scanned_at=datetime.fromtimestamp(source.stat().st_mtime),
             host_count=len(hosts),
             port_count=sum(len(host.ports) for host in hosts),
+            ephemeral=ephemeral,
         )
         self.saved_scans.insert(0, saved_scan)
         self._save()
         return saved_scan
+
+    def persist_scan(self, scan_id: UUID) -> bool:
+        for index, scan in enumerate(self.saved_scans):
+            if scan.id != scan_id or not scan.ephemeral:
+                continue
+
+            source = Path(scan.xml_path)
+            if not source.is_file():
+                return False
+
+            destination = saved_scans_dir() / f"{uuid4()}.xml"
+            shutil.copy2(source, destination)
+            source.unlink(missing_ok=True)
+            self.saved_scans[index] = SavedScan(
+                id=scan.id,
+                title=scan.title,
+                command=scan.command,
+                xml_path=str(destination),
+                scanned_at=scan.scanned_at,
+                host_count=scan.host_count,
+                port_count=scan.port_count,
+                notes=scan.notes,
+                tags=scan.tags,
+                ephemeral=False,
+            )
+            self._save()
+            return True
+        return False
 
     def remove_scan(self, scan_id, delete_file: bool = True) -> None:
         remaining: list[SavedScan] = []
@@ -78,6 +114,16 @@ class ScanHistoryStore:
         self.saved_scans = []
         self._save()
 
+    def cleanup_ephemeral_scans(self) -> None:
+        remaining: list[SavedScan] = []
+        for scan in self.saved_scans:
+            if scan.ephemeral:
+                Path(scan.xml_path).unlink(missing_ok=True)
+                continue
+            remaining.append(scan)
+        self.saved_scans = remaining
+        self._save()
+
     def update_scan_metadata(self, scan_id, notes: str, tags: str) -> None:
         for index, scan in enumerate(self.saved_scans):
             if scan.id == scan_id:
@@ -91,6 +137,7 @@ class ScanHistoryStore:
                     port_count=scan.port_count,
                     notes=notes,
                     tags=tags,
+                    ephemeral=scan.ephemeral,
                 )
                 self._save()
                 return

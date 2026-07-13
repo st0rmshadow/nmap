@@ -20,7 +20,7 @@ public static class JsonSerialization
         JsonSerializer.Deserialize<List<ScanProfile>>(payload, Options) ?? [];
 
     public static string EncodeSavedScans(IEnumerable<SavedScan> scans) =>
-        JsonSerializer.Serialize(scans, Options);
+        JsonSerializer.Serialize(scans.Where(scan => !scan.Ephemeral), Options);
 
     public static List<SavedScan> DecodeSavedScans(string payload) =>
         JsonSerializer.Deserialize<List<SavedScan>>(payload, Options) ?? [];

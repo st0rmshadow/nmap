@@ -8,4 +8,5 @@ public sealed class AppSettings
     public string DefaultTarget { get; set; } = "scanme.nmap.org";
     public string DefaultProfileName { get; set; } = "Quick Scan";
     public string NmapBinary { get; set; } = "nmap";
+    public bool SaveScansByDefault { get; set; } = true;
 }

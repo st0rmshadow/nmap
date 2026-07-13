@@ -349,7 +349,7 @@ $(NCATDIR)/ncat.h: nmap.h
 
 # Update the Nping version number.
 $(NPINGDIR)/nping.h: nmap.h
-	sed -e 's/^#[ \t]*define[ \t]\+NPING_VERSION[ \t]\+\(".*"\)/#define NPING_VERSION "0.$(NMAP_VERSION)"/' $@ > $@.tmp
+	sed -e 's/^#[ \t]*define[ \t]\+NPING_VERSION[ \t]\+\(".*"\)/#define NPING_VERSION "$(NMAP_VERSION)"/' $@ > $@.tmp
 	mv -f $@.tmp $@
 
 # Update the version number used by Zenmap.
@@ -480,7 +480,7 @@ check-zenmap-native:
 check-zenmap:
 	@cd $(ZENMAPDIR)/test && $(PYTHON) run_tests.py
 
-check-nmap: tests/nmap_dns_test tests/expr_match_test
+check-nmap: tests/nmap_dns_test tests/expr_match_test tests/cstring_unescape_test
 	for test in $^; do ./$$test; done
 
 check: @NCAT_CHECK@ @NSOCK_CHECK@ @ZENMAP_CHECK@ @ZENMAP_NATIVE_CHECK@ @NSE_CHECK@ @NDIFF_CHECK@ check-nmap

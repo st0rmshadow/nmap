@@ -112,6 +112,61 @@ public sealed class ZenmapAppState
 
     public void StopScan() => _scanRunner.Stop();
 
+    public void ClearOutput()
+    {
+        if (IsScanRunning)
+        {
+            return;
+        }
+
+        OutputText = "";
+        NotifyChanged();
+        OutputAppended?.Invoke("");
+    }
+
+    /// <summary>Replace output buffer (UI / verification). Does not start a scan.</summary>
+    public void SetOutputText(string text)
+    {
+        OutputText = text ?? "";
+        NotifyChanged();
+        OutputAppended?.Invoke(OutputText);
+    }
+
+    public void ClearResults()
+    {
+        if (IsScanRunning)
+        {
+            return;
+        }
+
+        OutputText = "Ready. Choose a profile, enter a target, then run a scan.";
+        StatusText = "Idle";
+        ProgressText = "";
+        ProgressPercent = null;
+        ExitStatus = null;
+        LastCommand = "";
+        LastXmlPath = "";
+        Hosts = [];
+        SelectedHost = null;
+        NotifyChanged();
+        OutputAppended?.Invoke(OutputText);
+    }
+
+    public void AppendOutputLine(string line)
+    {
+        if (string.IsNullOrEmpty(OutputText) || OutputText.EndsWith('\n'))
+        {
+            OutputText += line + "\n";
+        }
+        else
+        {
+            OutputText += "\n" + line + "\n";
+        }
+
+        NotifyChanged();
+        OutputAppended?.Invoke(OutputText);
+    }
+
     public void SaveSettings(AppSettings settings)
     {
         SettingsStore.Settings = settings;

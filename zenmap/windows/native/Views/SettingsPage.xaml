@@ -2,22 +2,56 @@
     x:Class="Zenmap.Windows.Views.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <ScrollViewer Padding="16">
-        <StackPanel Spacing="12" MaxWidth="640">
-            <TextBlock Text="Settings" Style="{ThemeResource TitleTextBlockStyle}" />
-            <TextBox x:Name="DefaultTargetBox" Header="Default target" />
-            <TextBox x:Name="NmapBinaryBox" Header="Nmap binary" />
-            <ComboBox x:Name="DefaultProfileCombo" Header="Default profile" />
-            <ComboBox x:Name="StatsEveryCombo" Header="Stats every">
-                <ComboBoxItem Content="1s" />
-                <ComboBoxItem Content="5s" />
-                <ComboBoxItem Content="10s" />
-                <ComboBoxItem Content="30s" />
-                <ComboBoxItem Content="60s" />
-            </ComboBox>
-            <ToggleSwitch x:Name="AutoStatsSwitch" Header="Auto add --stats-every" />
-            <ToggleSwitch x:Name="AutoVerboseSwitch" Header="Auto add -v" />
-            <Button Content="Save Settings" Click="SaveButton_Click" />
+    <ScrollViewer Padding="16,12">
+        <StackPanel Spacing="14" MaxWidth="640">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Settings" Style="{StaticResource ZenmapSectionTitleStyle}" FontSize="22" />
+                <TextBlock
+                    x:Name="SettingsPathText"
+                    Style="{StaticResource ZenmapDimTextStyle}"
+                    FontFamily="Consolas"
+                    FontSize="12" />
+            </StackPanel>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Scan Behavior" FontWeight="SemiBold" />
+                    <ToggleSwitch x:Name="AutoVerboseSwitch" Header="Auto add -v" />
+                    <ToggleSwitch x:Name="AutoStatsSwitch" Header="Auto add --stats-every" />
+                    <ComboBox x:Name="StatsEveryCombo" Header="Stats every" HorizontalAlignment="Left" MinWidth="160">
+                        <ComboBoxItem Content="1s" />
+                        <ComboBoxItem Content="5s" />
+                        <ComboBoxItem Content="10s" />
+                        <ComboBoxItem Content="30s" />
+                        <ComboBoxItem Content="60s" />
+                    </ComboBox>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Defaults" FontWeight="SemiBold" />
+                    <TextBox x:Name="DefaultTargetBox" Header="Default target" />
+                    <ComboBox x:Name="DefaultProfileCombo" Header="Default profile" HorizontalAlignment="Stretch" />
+                    <TextBox x:Name="NmapBinaryBox" Header="Nmap binary" FontFamily="Consolas" />
+                </StackPanel>
+            </Border>
+
+            <Button
+                Content="Save Settings"
+                Style="{ThemeResource AccentButtonStyle}"
+                HorizontalAlignment="Left"
+                Click="SaveButton_Click" />
         </StackPanel>
     </ScrollViewer>
 </Page>

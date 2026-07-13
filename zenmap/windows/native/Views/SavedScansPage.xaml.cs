@@ -15,26 +15,18 @@ public sealed partial class SavedScansPage : Page, IZenmapPage
         InitializeComponent();
         _state = state;
         _window = window;
+        PathText.Text = WindowsPaths.SavedScansDirectory;
         Refresh();
     }
 
     public void Refresh()
     {
-        ScansList.ItemsSource = ResultsFiltering.FilterSavedScans(_state.ScanHistoryStore.SavedScans, FilterBox.Text)
-            .Select(scan => $"{scan.ScannedAt:yyyy-MM-dd HH:mm}  {scan.Title}  hosts={scan.HostCount} ports={scan.PortCount}")
-            .ToArray();
-        ScansList.Tag = ResultsFiltering.FilterSavedScans(_state.ScanHistoryStore.SavedScans, FilterBox.Text);
+        var scans = ResultsFiltering.FilterSavedScans(_state.ScanHistoryStore.SavedScans, FilterBox.Text).ToList();
+        ScansList.ItemsSource = scans;
+        CountText.Text = $"{scans.Count}";
     }
 
-    private SavedScan? SelectedScan()
-    {
-        if (ScansList.SelectedIndex < 0 || ScansList.Tag is not IReadOnlyList<SavedScan> scans)
-        {
-            return null;
-        }
-
-        return scans[ScansList.SelectedIndex];
-    }
+    private SavedScan? SelectedScan() => ScansList.SelectedItem as SavedScan;
 
     private void FilterBox_TextChanged(object sender, TextChangedEventArgs e) => Refresh();
 
@@ -57,7 +49,7 @@ public sealed partial class SavedScansPage : Page, IZenmapPage
     {
         if (SelectedScan() is { } scan && File.Exists(scan.XmlPath))
         {
-            await Windows.System.Launcher.LaunchFileAsync(await Windows.Storage.StorageFile.GetFileFromPathAsync(scan.XmlPath));
+            await global::Windows.System.Launcher.LaunchFileAsync(await global::Windows.Storage.StorageFile.GetFileFromPathAsync(scan.XmlPath));
         }
     }
 

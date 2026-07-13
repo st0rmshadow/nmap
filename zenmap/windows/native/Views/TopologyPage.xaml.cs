@@ -26,7 +26,9 @@ public sealed partial class TopologyPage : Page, IZenmapPage
 
     public void Refresh()
     {
-        CountText.Text = $"{_state.Hosts.Count} host(s)";
+        CountText.Text = $"{_state.Hosts.Count} host{(_state.Hosts.Count == 1 ? "" : "s")}";
+        EmptyText.Visibility = _state.Hosts.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        TopologyCanvas.Visibility = _state.Hosts.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         DrawTopology();
     }
 
@@ -41,7 +43,7 @@ public sealed partial class TopologyPage : Page, IZenmapPage
         }
 
         var center = new Point(width / 2, height / 2);
-        var centerNode = new Ellipse { Width = 48, Height = 48, Fill = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 90, 140, 240)) };
+        var centerNode = new Ellipse { Width = 48, Height = 48, Fill = new SolidColorBrush(global::Windows.UI.Color.FromArgb(255, 90, 140, 240)) };
         Canvas.SetLeft(centerNode, center.X - 24);
         Canvas.SetTop(centerNode, center.Y - 24);
         TopologyCanvas.Children.Add(centerNode);
@@ -55,14 +57,14 @@ public sealed partial class TopologyPage : Page, IZenmapPage
                 Y1 = center.Y,
                 X2 = point.X,
                 Y2 = point.Y,
-                Stroke = new SolidColorBrush(Windows.UI.Color.FromArgb(120, 180, 180, 190)),
+                Stroke = new SolidColorBrush(global::Windows.UI.Color.FromArgb(120, 180, 180, 190)),
                 StrokeThickness = 1.2,
             };
             TopologyCanvas.Children.Add(line);
 
             var fill = index == _selectedIndex
-                ? Windows.UI.Color.FromArgb(255, 240, 190, 50)
-                : Windows.UI.Color.FromArgb(255, 60, 190, 110);
+                ? global::Windows.UI.Color.FromArgb(255, 240, 190, 50)
+                : global::Windows.UI.Color.FromArgb(255, 60, 190, 110);
             var node = new Ellipse { Width = 32, Height = 32, Fill = new SolidColorBrush(fill), Tag = index };
             Canvas.SetLeft(node, point.X - 16);
             Canvas.SetTop(node, point.Y - 16);
@@ -71,7 +73,6 @@ public sealed partial class TopologyPage : Page, IZenmapPage
             var label = new TextBlock
             {
                 Text = _state.Hosts[index].DisplayName,
-                Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 235, 235, 240)),
                 FontSize = 11,
             };
             Canvas.SetLeft(label, point.X - 30);

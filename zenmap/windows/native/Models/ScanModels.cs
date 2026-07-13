@@ -7,6 +7,8 @@ public sealed class ScanProfile
     public string Arguments { get; set; } = "";
     public string Description { get; set; } = "";
     public bool IsBuiltIn { get; set; } = true;
+
+    public string KindLabel => IsBuiltIn ? "built-in" : "custom";
 }
 
 public sealed class ScannedPort
@@ -49,4 +51,6 @@ public sealed class SavedScan
     public int PortCount { get; set; }
     public string Notes { get; set; } = "";
     public string Tags { get; set; } = "";
+
+    public string ScannedAtLocal => ScannedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
 }

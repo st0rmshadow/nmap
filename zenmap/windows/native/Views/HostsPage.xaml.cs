@@ -1,3 +1,5 @@
+using Windows.ApplicationModel.DataTransfer;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Zenmap.Windows.Models;
@@ -21,8 +23,10 @@ public sealed partial class HostsPage : Page, IZenmapPage
 
     public void Refresh()
     {
-        var query = FilterBox.Text;
-        HostsList.ItemsSource = ResultsFiltering.FilterHosts(_state.Hosts, query);
+        var filtered = ResultsFiltering.FilterHosts(_state.Hosts, FilterBox.Text).ToList();
+        HostsList.ItemsSource = filtered;
+        CountText.Text = $"{filtered.Count}";
+        EmptyText.Visibility = filtered.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void FilterBox_TextChanged(object sender, TextChangedEventArgs args) => Refresh();
@@ -41,5 +45,25 @@ public sealed partial class HostsPage : Page, IZenmapPage
         {
             _onShowDetails(host);
         }
+    }
+
+    private void DetailsButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (HostsList.SelectedItem is ScannedHost host)
+        {
+            _onShowDetails(host);
+        }
+    }
+
+    private void CopyAddressButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (HostsList.SelectedItem is not ScannedHost host)
+        {
+            return;
+        }
+
+        var package = new DataPackage();
+        package.SetText(host.Address);
+        Clipboard.SetContent(package);
     }
 }

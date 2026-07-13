@@ -7,6 +7,91 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
+
+            <SolidColorBrush x:Key="ZenmapDimBrush" Color="{ThemeResource TextFillColorSecondary}" />
+            <SolidColorBrush x:Key="ZenmapIdleBrush" Color="#FF2E7D32" />
+            <SolidColorBrush x:Key="ZenmapActiveBrush" Color="#FFE65100" />
+            <SolidColorBrush x:Key="ZenmapPreviewBrush" Color="{ThemeResource CardBackgroundFillColorDefault}" />
+
+            <Style x:Key="ZenmapHeroTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource TitleTextBlockStyle}">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Margin" Value="0,0,0,2" />
+            </Style>
+
+            <Style x:Key="ZenmapSubtitleStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="WrapWholeWords" />
+                <Setter Property="Margin" Value="0,0,0,8" />
+            </Style>
+
+            <Style x:Key="ZenmapSectionTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource SubtitleTextBlockStyle}">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="ZenmapDimTextStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="WrapWholeWords" />
+            </Style>
+
+            <Style x:Key="ZenmapMonoTextStyle" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="Consolas" />
+                <Setter Property="TextWrapping" Value="WrapWholeWords" />
+            </Style>
+
+            <Style x:Key="ZenmapFormLabelStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="0,0,12,0" />
+                <Setter Property="MinWidth" Value="72" />
+            </Style>
+
+            <Style x:Key="ZenmapMetricCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="Padding" Value="12,10" />
+                <Setter Property="MinWidth" Value="110" />
+            </Style>
+
+            <!-- macOS SwiftUI toolbar / .bordered approximation -->
+            <Style x:Key="ZenmapToolbarButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="{ThemeResource ControlFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="Padding" Value="9,4" />
+                <Setter Property="MinHeight" Value="28" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Height" Value="28" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <!-- macOS Button(role: .destructive) approximation -->
+            <Style x:Key="ZenmapToolbarDestructiveButtonStyle" TargetType="Button" BasedOn="{StaticResource ZenmapToolbarButtonStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+            </Style>
+
+            <!-- macOS .borderedProminent approximation -->
+            <Style x:Key="ZenmapToolbarPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="Padding" Value="10,4" />
+                <Setter Property="MinHeight" Value="28" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Height" Value="28" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="ZenmapToolbarIconStyle" TargetType="FontIcon">
+                <Setter Property="FontSize" Value="12" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

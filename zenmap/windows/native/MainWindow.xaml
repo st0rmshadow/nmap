@@ -2,95 +2,451 @@
     x:Class="Zenmap.Windows.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="Zenmap"
-    Width="1280"
-    Height="820">
+    Title="Zenmap">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Padding="16,12" ColumnSpacing="12" RowSpacing="8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+        <MenuBar x:Name="MainMenuBar" Grid.Row="0" Padding="8,4,8,0">
+            <MenuBarItem Title="File">
+                <MenuFlyoutItem x:Name="MenuNewWindow" Text="New Window" Click="MenuNewWindow_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="N" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuOpenScan" Text="Open Scan..." Click="MenuOpenScan_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="O" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuOpenScanInWindow" Text="Open Scan in This Window..." Click="MenuOpenScan_Click" />
+                <MenuFlyoutSubItem x:Name="RecentScansMenu" Text="Recent Scans" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="MenuSaveScan" Text="Save Scan" Click="MenuSaveScan_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="S" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuSaveAllScans" Text="Save All Scans to Directory..." Click="MenuSaveAllScans_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="S" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="MenuPrint" Text="Print..." Click="MenuPrint_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="P" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="MenuExit" Text="Exit" Click="MenuExit_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Q" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+
+            <MenuBarItem Title="Edit">
+                <MenuFlyoutItem x:Name="MenuFindOutput" Text="Find in Output..." Click="MenuFindOutput_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="F" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuCopyOutput" Text="Copy Output" Click="MenuCopyOutput_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="C" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuClearOutput" Text="Clear Output" Click="MenuClearOutput_Click" />
+            </MenuBarItem>
+
+            <MenuBarItem Title="View">
+                <MenuFlyoutItem Text="Show Output" Click="MenuShowTab_Click" Tag="output">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Number1" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Show Hosts" Click="MenuShowTab_Click" Tag="hosts">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Number2" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Show Ports" Click="MenuShowTab_Click" Tag="ports">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Number3" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Show Services" Click="MenuShowTab_Click" Tag="services">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Number4" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Show Details" Click="MenuShowTab_Click" Tag="details">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="Number5" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Saved Scans" Click="MenuShowTab_Click" Tag="saved" />
+                <MenuFlyoutItem Text="Compare" Click="MenuShowTab_Click" Tag="compare" />
+                <MenuFlyoutItem Text="Topology" Click="MenuShowTab_Click" Tag="topology" />
+                <MenuFlyoutItem Text="Profiles" Click="MenuShowTab_Click" Tag="profiles" />
+                <MenuFlyoutItem Text="Settings" Click="MenuShowTab_Click" Tag="settings" />
+            </MenuBarItem>
+
+            <MenuBarItem Title="Scan">
+                <MenuFlyoutItem x:Name="MenuStartScan" Text="Start Scan" Click="MenuStartScan_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="R" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuStopScan" Text="Stop Scan" Click="MenuStopScan_Click" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Name="MenuClearResults" Text="Clear Results" Click="MenuClearResults_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="K" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+
+            <MenuBarItem Title="Window">
+                <MenuFlyoutItem Text="New Window" Click="MenuNewWindow_Click" />
+                <MenuFlyoutItem Text="Close Window" Click="MenuCloseWindow_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="W" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+
+            <MenuBarItem Title="Help">
+                <MenuFlyoutItem Text="Nmap Reference Guide" Click="MenuOpenUrl_Click" Tag="https://nmap.org/docs.html" />
+                <MenuFlyoutItem Text="Nmap Book" Click="MenuOpenUrl_Click" Tag="https://nmap.org/book/" />
+                <MenuFlyoutItem Text="Nmap Man Page" Click="MenuOpenUrl_Click" Tag="https://nmap.org/book/man.html" />
+                <MenuFlyoutItem Text="NSE Script Documentation" Click="MenuOpenUrl_Click" Tag="https://nmap.org/nsedoc/" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Zenmap User Guide" Click="MenuOpenUrl_Click" Tag="https://nmap.org/book/zenmap.html" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Copy Diagnostic Info" Click="MenuCopyDiagnostic_Click" />
+                <MenuFlyoutItem Text="Report a Bug" Click="MenuOpenUrl_Click" Tag="https://github.com/nmap/nmap/issues" />
+                <MenuFlyoutItem Text="Nmap Website" Click="MenuOpenUrl_Click" Tag="https://nmap.org/" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="About Zenmap" Click="MenuAbout_Click" />
+            </MenuBarItem>
+        </MenuBar>
+
+    <NavigationView
+        x:Name="NavView"
+        Grid.Row="1"
+        PaneDisplayMode="Left"
+        IsBackButtonVisible="Collapsed"
+        IsSettingsVisible="False"
+        OpenPaneLength="240"
+        IsPaneToggleButtonVisible="False"
+        SelectionChanged="NavView_SelectionChanged">
+        <NavigationView.MenuItems>
+            <NavigationViewItemHeader Content="Scan" />
+            <NavigationViewItem Content="Output" Tag="output">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE756;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Hosts" Tag="hosts">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7F8;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Ports" Tag="ports">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8FD;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Services" Tag="services">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE774;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Details" Tag="details">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE946;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItemHeader Content="History" />
+            <NavigationViewItem Content="Saved Scans" Tag="saved">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8B7;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Compare" Tag="compare">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8A7;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+
+            <NavigationViewItemHeader Content="Tools" />
+            <NavigationViewItem Content="Topology" Tag="topology">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE909;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Profiles" Tag="profiles">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE90F;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Settings" Tag="settings">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE713;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.MenuItems>
+
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Zenmap for Windows" Style="{ThemeResource TitleTextBlockStyle}" />
-            <TextBlock
-                Grid.Row="1"
-                Grid.Column="0"
-                Grid.ColumnSpan="3"
-                Text="Native WinUI 3 front end with UAC support and local saved-scan history"
-                Opacity="0.75" />
+            <!-- Persistent scan form (macOS header / Linux clamp) -->
+            <Border
+                Grid.Row="0"
+                Padding="18,16,18,12"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                <Grid MaxWidth="1100" HorizontalAlignment="Stretch" RowSpacing="10" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-            <TextBox x:Name="TargetBox" Grid.Row="2" Grid.Column="0" Width="220" Header="Target" PlaceholderText="scanme.nmap.org" TextChanged="FormFieldChanged" />
-            <ComboBox x:Name="ProfileCombo" Grid.Row="2" Grid.Column="1" Header="Profile" SelectionChanged="ProfileCombo_SelectionChanged" />
-            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
-                <Button x:Name="ScanButton" Content="Scan" Style="{ThemeResource AccentButtonStyle}" Click="ScanButton_Click" />
-                <Button x:Name="StopButton" Content="Stop" Click="StopButton_Click" IsEnabled="False" />
-                <Button Content="Open XML" Click="OpenXmlButton_Click" />
-            </StackPanel>
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="Nmap for Windows"
+                        Style="{StaticResource ZenmapHeroTitleStyle}" />
+                    <!-- macOS ToolbarItemGroup twin: Open/Save/Saved | Find/Stop/Scan -->
+                    <StackPanel
+                        Grid.Row="0"
+                        Grid.Column="2"
+                        Orientation="Horizontal"
+                        Spacing="12"
+                        VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button
+                                x:Name="OpenXmlButton"
+                                Style="{StaticResource ZenmapToolbarButtonStyle}"
+                                Click="OpenXmlButton_Click"
+                                ToolTipService.ToolTip="Open Nmap XML">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8B7;" Style="{StaticResource ZenmapToolbarIconStyle}" />
+                                    <TextBlock Text="Open XML" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                x:Name="SaveXmlButton"
+                                Style="{StaticResource ZenmapToolbarButtonStyle}"
+                                Click="SaveXmlButton_Click"
+                                ToolTipService.ToolTip="Save Current XML"
+                                IsEnabled="False">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE74E;" Style="{StaticResource ZenmapToolbarIconStyle}" />
+                                    <TextBlock Text="Save XML" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                x:Name="SavedScansButton"
+                                Style="{StaticResource ZenmapToolbarButtonStyle}"
+                                Click="SavedScansButton_Click"
+                                ToolTipService.ToolTip="Show Saved Scans">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE7B8;" Style="{StaticResource ZenmapToolbarIconStyle}" />
+                                    <TextBlock Text="Saved Scans" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
 
-            <TextBox
-                x:Name="ArgumentsBox"
-                Grid.Row="3"
-                Grid.Column="0"
-                Grid.ColumnSpan="3"
-                Header="Arguments"
-                TextChanged="FormFieldChanged" />
-            <TextBlock
-                x:Name="CommandPreviewText"
-                Grid.Row="4"
-                Grid.Column="0"
-                Grid.ColumnSpan="3"
-                FontFamily="Consolas"
-                TextWrapping="WrapWholeWords"
-                Opacity="0.85" />
-        </Grid>
+                        <Border
+                            Width="1"
+                            Height="16"
+                            Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+                            VerticalAlignment="Center"
+                            Opacity="0.7" />
 
-        <NavigationView
-            x:Name="NavView"
-            Grid.Row="1"
-            PaneDisplayMode="Left"
-            IsBackButtonVisible="Collapsed"
-            IsSettingsVisible="True"
-            SelectionChanged="NavView_SelectionChanged"
-            ItemInvoked="NavView_ItemInvoked">
-            <NavigationView.MenuItems>
-                <NavigationViewItem Content="Output" Tag="output" Icon="Font" />
-                <NavigationViewItem Content="Hosts" Tag="hosts" Icon="Contact" />
-                <NavigationViewItem Content="Ports" Tag="ports" Icon="Switch" />
-                <NavigationViewItem Content="Services" Tag="services" Icon="Library" />
-                <NavigationViewItem Content="Details" Tag="details" Icon="List" />
-                <NavigationViewItemSeparator />
-                <NavigationViewItem Content="Saved Scans" Tag="saved" Icon="Save" />
-                <NavigationViewItem Content="Compare" Tag="compare" Icon="Compare" />
-                <NavigationViewItem Content="Topology" Tag="topology" Icon="Map" />
-                <NavigationViewItem Content="Profiles" Tag="profiles" Icon="Document" />
-            </NavigationView.MenuItems>
-            <Frame x:Name="ContentFrame" />
-        </NavigationView>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button
+                                x:Name="FindButton"
+                                Style="{StaticResource ZenmapToolbarButtonStyle}"
+                                Click="FindButton_Click"
+                                ToolTipService.ToolTip="Find in Output">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE721;" Style="{StaticResource ZenmapToolbarIconStyle}" />
+                                    <TextBlock Text="Find" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                x:Name="StopButton"
+                                Style="{StaticResource ZenmapToolbarDestructiveButtonStyle}"
+                                Click="StopButton_Click"
+                                ToolTipService.ToolTip="Stop Scan"
+                                IsEnabled="False">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE71A;" Style="{StaticResource ZenmapToolbarIconStyle}" />
+                                    <TextBlock Text="Stop" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                x:Name="ScanButton"
+                                Style="{StaticResource ZenmapToolbarPrimaryButtonStyle}"
+                                Click="ScanButton_Click"
+                                ToolTipService.ToolTip="Start Scan">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE768;" Style="{StaticResource ZenmapToolbarIconStyle}" />
+                                    <TextBlock x:Name="ScanButtonLabel" Text="Scan" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
 
-        <Border Grid.Row="2" Padding="16,8" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-            <StackPanel Spacing="4">
-                <Grid>
-                    <TextBlock x:Name="StatusText" Text="Ready" />
-                    <TextBlock x:Name="HostCountText" HorizontalAlignment="Right" Opacity="0.75" Text="0 hosts" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="3"
+                        Text="Native WinUI front end with UAC support and local saved-scan history"
+                        Style="{StaticResource ZenmapSubtitleStyle}" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Target" Style="{StaticResource ZenmapFormLabelStyle}" />
+                    <TextBox
+                        x:Name="TargetBox"
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Grid.ColumnSpan="2"
+                        PlaceholderText="scanme.nmap.org, 192.168.1.0/24, etc."
+                        TextChanged="FormFieldChanged" />
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Profile" Style="{StaticResource ZenmapFormLabelStyle}" />
+                    <ComboBox
+                        x:Name="ProfileCombo"
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        Grid.ColumnSpan="2"
+                        HorizontalAlignment="Stretch"
+                        SelectionChanged="ProfileCombo_SelectionChanged" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Arguments" Style="{StaticResource ZenmapFormLabelStyle}" />
+                    <TextBox
+                        x:Name="ArgumentsBox"
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        Grid.ColumnSpan="2"
+                        FontFamily="Consolas"
+                        TextChanged="FormFieldChanged" />
+
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Preview" Style="{StaticResource ZenmapFormLabelStyle}" VerticalAlignment="Top" Margin="0,8,12,0" />
+                    <Border
+                        Grid.Row="5"
+                        Grid.Column="1"
+                        Grid.ColumnSpan="2"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="10,8">
+                        <TextBlock
+                            x:Name="CommandPreviewText"
+                            Style="{StaticResource ZenmapMonoTextStyle}"
+                            IsTextSelectionEnabled="True" />
+                    </Border>
+
+                    <TextBlock
+                        x:Name="ProfileDescriptionText"
+                        Grid.Row="6"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="3"
+                        Style="{StaticResource ZenmapDimTextStyle}" />
                 </Grid>
-                <TextBlock x:Name="ProgressText" Opacity="0.75" TextWrapping="WrapWholeWords" />
-                <ProgressBar x:Name="ScanProgressBar" Maximum="100" Visibility="Collapsed" />
-            </StackPanel>
-        </Border>
+            </Border>
+
+            <!-- Clip host so Frame/Page cannot grow past leftover * height (unbounded ScrollViewer). -->
+            <Border
+                x:Name="ContentHost"
+                Grid.Row="1"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch">
+                <Frame
+                    x:Name="ContentFrame"
+                    VerticalAlignment="Stretch"
+                    HorizontalAlignment="Stretch" />
+            </Border>
+
+            <!-- Status footer -->
+            <Border
+                Grid.Row="2"
+                Padding="16,8"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                Background="{ThemeResource LayerFillColorDefaultBrush}">
+                <Grid RowSpacing="4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Ellipse
+                            x:Name="StatusDot"
+                            Grid.Column="0"
+                            Width="8"
+                            Height="8"
+                            Fill="{StaticResource ZenmapIdleBrush}"
+                            VerticalAlignment="Center" />
+                        <TextBlock
+                            x:Name="StatusText"
+                            Grid.Column="1"
+                            Text="Idle"
+                            VerticalAlignment="Center" />
+                        <ProgressBar
+                            x:Name="ScanProgressBar"
+                            Grid.Column="2"
+                            Width="160"
+                            Maximum="100"
+                            VerticalAlignment="Center"
+                            Visibility="Collapsed" />
+                        <TextBlock
+                            x:Name="HostCountText"
+                            Grid.Column="3"
+                            Style="{StaticResource ZenmapDimTextStyle}"
+                            Text="0 hosts"
+                            VerticalAlignment="Center"
+                            Margin="12,0,0,0" />
+                    </Grid>
+                    <TextBlock
+                        x:Name="ProgressText"
+                        Grid.Row="1"
+                        Style="{StaticResource ZenmapDimTextStyle}"
+                        FontSize="12"
+                        Margin="18,0,0,0" />
+                </Grid>
+            </Border>
+        </Grid>
+    </NavigationView>
     </Grid>
 </Window>

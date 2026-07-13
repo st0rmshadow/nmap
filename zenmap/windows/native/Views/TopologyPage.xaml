@@ -2,15 +2,43 @@
     x:Class="Zenmap.Windows.Views.TopologyPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid Padding="12" RowSpacing="8">
+    <Grid Padding="16,12" RowSpacing="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-            <TextBlock x:Name="CountText" VerticalAlignment="Center" />
-            <Button Content="Host Details" Click="DetailsButton_Click" />
-        </StackPanel>
-        <Canvas x:Name="TopologyCanvas" Grid.Row="1" Background="#FF1E1E24" PointerPressed="TopologyCanvas_PointerPressed" />
+
+        <Grid Grid.Row="0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Topology" Style="{StaticResource ZenmapSectionTitleStyle}" />
+                <TextBlock
+                    Text="Radial host map for the current scan"
+                    Style="{StaticResource ZenmapDimTextStyle}"
+                    VerticalAlignment="Center" />
+                <TextBlock x:Name="CountText" Style="{StaticResource ZenmapDimTextStyle}" VerticalAlignment="Center" />
+            </StackPanel>
+            <Button Content="Host Details" HorizontalAlignment="Right" Click="DetailsButton_Click" />
+        </Grid>
+
+        <Border
+            Grid.Row="1"
+            CornerRadius="8"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid>
+                <TextBlock
+                    x:Name="EmptyText"
+                    Text="Run a scan to visualize host relationships."
+                    Style="{StaticResource ZenmapDimTextStyle}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed" />
+                <Canvas
+                    x:Name="TopologyCanvas"
+                    Background="Transparent"
+                    PointerPressed="TopologyCanvas_PointerPressed" />
+            </Grid>
+        </Border>
     </Grid>
 </Page>

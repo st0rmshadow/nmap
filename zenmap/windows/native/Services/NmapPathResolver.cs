@@ -49,22 +49,36 @@ public static class NmapPathResolver
     public static string ResolveNmapDataDirectory(string nmapBinary)
     {
         var binaryPath = new FileInfo(nmapBinary);
+        var binaryDir = binaryPath.Directory?.FullName ?? AppContext.BaseDirectory;
+
+        // Windows official installs keep nmap-services / scripts beside nmap.exe.
+        // Unix layouts use ../share/nmap. Prefer a directory that actually contains
+        // nmap data files so setting NMAPDIR does not break elevated scans.
         var candidates = new[]
         {
+            binaryDir,
             Path.Combine(binaryPath.Directory?.Parent?.FullName ?? "", "share", "nmap"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "nmap"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Nmap"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Nmap"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Nmap", "share", "nmap"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Nmap", "share", "nmap"),
         };
 
         foreach (var candidate in candidates)
         {
-            if (Directory.Exists(candidate))
+            if (IsNmapDataDirectory(candidate))
             {
                 return candidate;
             }
         }
 
-        return Path.Combine(binaryPath.Directory?.Parent?.FullName ?? AppContext.BaseDirectory, "share", "nmap");
+        return binaryDir;
     }
+
+    private static bool IsNmapDataDirectory(string path) =>
+        !string.IsNullOrWhiteSpace(path) &&
+        Directory.Exists(path) &&
+        (File.Exists(Path.Combine(path, "nmap-services")) ||
+         File.Exists(Path.Combine(path, "nse_main.lua")));
 }

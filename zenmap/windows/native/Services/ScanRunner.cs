@@ -235,6 +235,7 @@ public sealed class ScanRunner : IDisposable
         PostOutput($"Using nmap: {binary}\n");
         PostOutput($"Using NMAPDIR: {NmapPathResolver.ResolveNmapDataDirectory(binary)}\n");
         PostOutput("Privilege mode: administrator\n");
+        PostOutput($"XML output: {xmlPath}\n");
         PostOutput("Administrator authorization requested. Running nmap elevated...\n");
 
         try

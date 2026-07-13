@@ -23,28 +23,29 @@ public sealed partial class DetailsPage : Page, IZenmapPage
         var filtered = ports.Count(port => port.State == "filtered");
         var closed = ports.Count(port => port.State == "closed");
 
-        SummaryText.Text =
-            $"Hosts: {hosts.Count}    Ports: {ports.Count}    Open: {open}    Filtered: {filtered}    Closed: {closed}";
+        HostsMetric.Text = hosts.Count.ToString();
+        PortsMetric.Text = ports.Count.ToString();
+        OpenMetric.Text = open.ToString();
+        FilteredMetric.Text = filtered.ToString();
+        ClosedMetric.Text = closed.ToString();
 
-        ContextText.Text = string.Join('\n',
-        [
-            $"Status: {_state.StatusText}",
-            $"Command: {_state.LastCommand}",
-            $"Exit status: {_state.ExitStatus?.ToString() ?? "n/a"}",
-            $"XML: {_state.LastXmlPath}",
-            $"Nmap binary: {_state.SettingsStore.Settings.NmapBinary}",
-        ]);
+        StatusLine.Text = $"Status: {_state.StatusText}";
+        CommandLine.Text = $"Command: {_state.LastCommand}";
+        ExitLine.Text = $"Exit status: {_state.ExitStatus?.ToString() ?? "n/a"}";
+        XmlLine.Text = $"XML: {_state.LastXmlPath}";
+        BinaryLine.Text = $"Nmap binary: {_state.SettingsStore.Settings.NmapBinary}";
 
         var host = _state.SelectedHost ?? hosts.FirstOrDefault();
         if (host is null)
         {
-            PortsList.ItemsSource = Array.Empty<string>();
+            HostHeaderText.Text = "Select a host in the Hosts tab to inspect ports.";
+            PortsList.ItemsSource = null;
             return;
         }
 
+        HostHeaderText.Text = $"{host.DisplayName}  ·  {host.Address}  ·  {host.Status}";
         PortsList.ItemsSource = host.Ports
             .OrderBy(port => int.TryParse(port.PortNumber, out var number) ? number : int.MaxValue)
-            .Select(port => $"{port.PortNumber}/{port.ProtocolName}  {port.State}  {port.ServiceName}  {port.ServiceSummary}")
-            .ToArray();
+            .ToList();
     }
 }

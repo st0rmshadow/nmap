@@ -20,22 +20,10 @@ public sealed partial class ProfilesPage : Page, IZenmapPage
 
     public void Refresh()
     {
-        var profiles = ResultsFiltering.FilterProfiles(_state.Profiles, FilterBox.Text);
-        ProfilesList.ItemsSource = profiles
-            .Select(profile => $"{profile.Name}  [{(profile.IsBuiltIn ? "built-in" : "custom")}]  {profile.Arguments}")
-            .ToArray();
-        ProfilesList.Tag = profiles;
+        ProfilesList.ItemsSource = ResultsFiltering.FilterProfiles(_state.Profiles, FilterBox.Text).ToList();
     }
 
-    private ScanProfile? SelectedProfile()
-    {
-        if (ProfilesList.SelectedIndex < 0 || ProfilesList.Tag is not IReadOnlyList<ScanProfile> profiles)
-        {
-            return null;
-        }
-
-        return profiles[ProfilesList.SelectedIndex];
-    }
+    private ScanProfile? SelectedProfile() => ProfilesList.SelectedItem as ScanProfile;
 
     private void FilterBox_TextChanged(object sender, TextChangedEventArgs e) => Refresh();
 
@@ -110,7 +98,7 @@ public sealed partial class ProfilesPage : Page, IZenmapPage
     private async Task<(string Name, string Arguments, string Description)?> ShowEditorAsync(ScanProfile? profile)
     {
         var nameBox = new TextBox { Header = "Name", Text = profile?.Name ?? "" };
-        var argsBox = new TextBox { Header = "Arguments", Text = profile?.Arguments ?? "" };
+        var argsBox = new TextBox { Header = "Arguments", Text = profile?.Arguments ?? "", FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas") };
         var descriptionBox = new TextBox { Header = "Description", Text = profile?.Description ?? "", AcceptsReturn = true };
         var panel = new StackPanel { Spacing = 8, Width = 420 };
         panel.Children.Add(nameBox);

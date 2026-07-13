@@ -12,6 +12,7 @@ The stack is intentionally Qt-free:
 ## Feature parity
 
 - Native GNOME-style shell with sidebar navigation
+- Header toolbar icons for Open XML, Save XML, Saved Scans, Find, Stop, and Scan
 - Target/profile/arguments scan form with live command preview
 - Live nmap stdout output and progress footer
 - Hosts, ports, services, and details result views with filtering

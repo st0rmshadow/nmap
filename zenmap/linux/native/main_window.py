@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import gi
@@ -67,26 +68,109 @@ class MainWindow(Adw.ApplicationWindow):
         self._apply_settings_to_form()
         self._refresh_profile_dropdown()
         self._refresh_saved_views()
+        self._update_scan_button_state()
 
     def _profile_by_name(self, name: str) -> ScanProfile:
         return next((profile for profile in self._profiles if profile.name == name), self._profiles[0])
+
+    def _header_icon_button(
+        self,
+        icon_name: str,
+        tooltip: str,
+        callback,
+        *,
+        css_class: str | None = None,
+    ) -> Gtk.Button:
+        button = Gtk.Button.new_from_icon_name(icon_name)
+        button.set_tooltip_text(tooltip)
+        if css_class:
+            button.add_css_class(css_class)
+        button.connect("clicked", callback)
+        return button
 
     def _build_ui(self) -> None:
         toolbar_view = Adw.ToolbarView()
         self.set_content(toolbar_view)
 
         header = Adw.HeaderBar()
-        self._scan_button = Gtk.Button(label="Scan")
-        self._scan_button.add_css_class("suggested-action")
-        self._scan_button.connect("clicked", self._on_scan_clicked)
-        header.pack_end(self._scan_button)
 
-        self._stop_button = Gtk.Button(label="Stop")
+        # Icon controls (macOS-style). pack_end is right-to-left.
+        # Visual order: Open XML | Save XML | Saved Scans | Find | Stop | Scan
+        self._header_scan_button = self._header_icon_button(
+            "media-playback-start-symbolic",
+            "Start Scan",
+            self._on_scan_clicked,
+            css_class="suggested-action",
+        )
+        header.pack_end(self._header_scan_button)
+
+        self._header_stop_button = self._header_icon_button(
+            "media-playback-stop-symbolic",
+            "Stop Scan",
+            self._on_stop_clicked,
+            css_class="destructive-action",
+        )
+        self._header_stop_button.set_sensitive(False)
+        header.pack_end(self._header_stop_button)
+
+        self._find_button = self._header_icon_button(
+            "edit-find-symbolic",
+            "Find in Output",
+            self._on_find_clicked,
+        )
+        header.pack_end(self._find_button)
+
+        self._saved_scans_button = self._header_icon_button(
+            "folder-symbolic",
+            "Show Saved Scans",
+            self._on_saved_scans_clicked,
+        )
+        header.pack_end(self._saved_scans_button)
+
+        self._save_xml_button = self._header_icon_button(
+            "document-save-symbolic",
+            "Save Current XML",
+            self._on_save_xml_clicked,
+        )
+        self._save_xml_button.set_sensitive(False)
+        header.pack_end(self._save_xml_button)
+
+        self._open_xml_button = self._header_icon_button(
+            "document-open-symbolic",
+            "Open Nmap XML",
+            self._on_open_xml_clicked,
+        )
+        header.pack_end(self._open_xml_button)
+        toolbar_view.add_top_bar(header)
+
+        # Labeled Scan/Stop row directly under the icon toolbar.
+        action_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        action_bar.set_halign(Gtk.Align.END)
+        action_bar.set_margin_top(6)
+        action_bar.set_margin_bottom(6)
+        action_bar.set_margin_start(12)
+        action_bar.set_margin_end(12)
+
+        self._stop_button = Gtk.Button()
+        self._stop_button.set_child(
+            Adw.ButtonContent(icon_name="media-playback-stop-symbolic", label="Stop")
+        )
         self._stop_button.add_css_class("destructive-action")
+        self._stop_button.set_tooltip_text("Stop Scan")
         self._stop_button.set_sensitive(False)
         self._stop_button.connect("clicked", self._on_stop_clicked)
-        header.pack_end(self._stop_button)
-        toolbar_view.add_top_bar(header)
+        action_bar.append(self._stop_button)
+
+        self._scan_button = Gtk.Button()
+        self._scan_button.set_child(
+            Adw.ButtonContent(icon_name="media-playback-start-symbolic", label="Scan")
+        )
+        self._scan_button.add_css_class("suggested-action")
+        self._scan_button.set_tooltip_text("Start Scan")
+        self._scan_button.connect("clicked", self._on_scan_clicked)
+        action_bar.append(self._scan_button)
+
+        toolbar_view.add_top_bar(action_bar)
 
         split_view = Adw.NavigationSplitView()
         split_view.set_sidebar_width_fraction(0.22)
@@ -472,7 +556,49 @@ class MainWindow(Adw.ApplicationWindow):
         has_target = bool(split_targets(self._target))
         self._scan_button.set_sensitive(not running and has_target)
         self._stop_button.set_sensitive(running)
-        self._scan_button.set_label("Running..." if running else "Scan")
+        self._header_scan_button.set_sensitive(not running and has_target)
+        self._header_stop_button.set_sensitive(running)
+        self._open_xml_button.set_sensitive(not running)
+        self._save_xml_button.set_sensitive(bool(self._last_xml_path) and Path(self._last_xml_path).is_file())
+        scan_content = self._scan_button.get_child()
+        if isinstance(scan_content, Adw.ButtonContent):
+            scan_content.set_label("Running..." if running else "Scan")
+        self._scan_button.set_tooltip_text("Scan running..." if running else "Start Scan")
+        self._header_scan_button.set_tooltip_text("Scan running..." if running else "Start Scan")
+
+    def _on_open_xml_clicked(self, _button: Gtk.Button) -> None:
+        if self._scan_runner.is_running:
+            return
+        self._import_xml_file()
+
+    def _on_save_xml_clicked(self, _button: Gtk.Button) -> None:
+        if not self._last_xml_path or not Path(self._last_xml_path).is_file():
+            self._append_output("\nNo XML scan result is available to save.\n")
+            return
+        dialog = Gtk.FileDialog(title="Save Nmap XML")
+        dialog.set_initial_name("nmap-scan.xml")
+        dialog.save(self, None, self._on_save_xml_selected)
+
+    def _on_save_xml_selected(self, dialog: Gtk.FileDialog, result: Gio.AsyncResult) -> None:
+        try:
+            file_obj = dialog.save_finish(result)
+        except GLib.Error:
+            return
+        path = file_obj.get_path()
+        if not path:
+            return
+        try:
+            shutil.copy2(self._last_xml_path, path)
+            self._append_output(f"\nSaved XML to: {path}\n")
+        except OSError as error:
+            self._append_output(f"\nFailed to save XML: {error}\n")
+
+    def _on_saved_scans_clicked(self, _button: Gtk.Button) -> None:
+        self._select_tab("Saved Scans")
+
+    def _on_find_clicked(self, _button: Gtk.Button) -> None:
+        self._select_tab("Output")
+        self._output_view.toggle_find()
 
     def _load_saved_scan(self, scan: SavedScan) -> None:
         hosts = parse_nmap_xml(scan.xml_path)
@@ -490,6 +616,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._output_view.set_text(self._output_text)
         self._set_hosts_idle(hosts)
         self._update_scan_context()
+        self._update_scan_button_state()
 
     def _open_saved_scan_xml(self, scan: SavedScan) -> None:
         self._load_saved_scan(scan)

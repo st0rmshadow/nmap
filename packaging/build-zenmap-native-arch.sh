@@ -14,6 +14,9 @@ mkdir -p "${PKGDIR}"
 tar -C "${ROOT}" \
   --exclude=.git \
   --exclude=.xcode-build \
+  --exclude=packaging/arch-build \
+  --exclude=packaging/deb-build \
+  --exclude=packaging/rpm-build \
   -czf "${PKGDIR}/nmap-${VERSION}.tar.gz" \
   --transform "s,^,nmap-${VERSION}/," .
 

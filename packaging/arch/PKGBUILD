@@ -28,9 +28,9 @@ package() {
 
   cd zenmap/linux
   python -m build --wheel --no-isolation
-  pip install --root="${pkgdir}" --no-deps dist/*.whl
+  python -m installer --destdir="${pkgdir}" dist/*.whl
 
-  install -Dm644 "../../../docs/zenmap-native.1" \
+  install -Dm644 "../../docs/zenmap-native.1" \
     "${pkgdir}/usr/share/man/man1/zenmap-native.1"
   install -Dm644 data/org.nmap.ZenmapNativeLinux.desktop \
     "${pkgdir}/usr/share/applications/org.nmap.ZenmapNativeLinux.desktop"

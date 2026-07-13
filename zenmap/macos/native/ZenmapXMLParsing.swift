@@ -21,7 +21,7 @@ extension ContentView {
 
     func applyLiveHosts(_ parsedHosts: [ScannedHost]) {
         let previousAddress = hosts.first(where: { $0.id == selectedHostID })?.address
-        guard hostsFingerprint(parsedHosts) != hostsFingerprint(hosts) else {
+        guard !hostsEqual(parsedHosts, hosts) else {
             return
         }
 
@@ -62,6 +62,31 @@ extension ContentView {
                 }
             )
         }
+    }
+
+    func hostsEqual(_ lhs: [ScannedHost], _ rhs: [ScannedHost]) -> Bool {
+        let left = hostsFingerprint(lhs)
+        let right = hostsFingerprint(rhs)
+        guard left.count == right.count else {
+            return false
+        }
+
+        for (leftHost, rightHost) in zip(left, right) {
+            if leftHost.0 != rightHost.0 || leftHost.1 != rightHost.1 || leftHost.2 != rightHost.2 {
+                return false
+            }
+            if leftHost.3.count != rightHost.3.count {
+                return false
+            }
+            for (leftPort, rightPort) in zip(leftHost.3, rightHost.3) {
+                if leftPort.0 != rightPort.0 || leftPort.1 != rightPort.1 || leftPort.2 != rightPort.2
+                    || leftPort.3 != rightPort.3 || leftPort.4 != rightPort.4 || leftPort.5 != rightPort.5 {
+                    return false
+                }
+            }
+        }
+
+        return true
     }
 
     func parseCompleteNmapXML(data: Data) -> [ScannedHost]? {

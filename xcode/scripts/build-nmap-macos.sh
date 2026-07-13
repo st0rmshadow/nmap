@@ -27,10 +27,6 @@ if [ ! -f Makefile ]; then
 fi
 
 echo "Building Nmap with $JOBS jobs..."
-make -j"$JOBS"
-
-echo "Staging install into $INSTALL_DIR..."
-make install DESTDIR="$INSTALL_DIR"
+make -j"$JOBS" nmap
 
 echo "Built binary: $ROOT_DIR/nmap"
-echo "Staged install root: $INSTALL_DIR"

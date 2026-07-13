@@ -133,7 +133,7 @@ extension ContentView {
     }
 
     func persistSelectedSavedScan() {
-        guard let selectedSavedScanID,
+        guard let selectedSavedScanID = scanHistory.selectedSavedScanID,
               scanHistory.persistSavedScan(id: selectedSavedScanID) else {
             return
         }

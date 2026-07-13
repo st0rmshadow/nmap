@@ -27,7 +27,7 @@ extension ContentView {
             if let selectedSavedScan {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text(selectedSavedScan.title)
+                        Text(selectedSavedScan.displayTitle)
                             .font(.headline)
 
                         Button {
@@ -48,32 +48,37 @@ extension ContentView {
                             .foregroundStyle(.secondary)
                     }
 
-                    TextField("Tags, comma separated", text: $savedScanTagsText)
-                        .textFieldStyle(.roundedBorder)
+                    if selectedSavedScan.ephemeral {
+                        Text("This scan is session-only. Use Save Scan in the toolbar to keep it permanently.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        TextField("Tags, comma separated", text: $savedScanTagsText)
+                            .textFieldStyle(.roundedBorder)
 
-                    TextEditor(text: $savedScanNotesText)
-                        .font(.body)
-                        .frame(minHeight: 70)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(.quaternary)
-                        )
+                        TextEditor(text: $savedScanNotesText)
+                            .font(.body)
+                            .frame(minHeight: 70)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(.quaternary)
+                            )
 
-                    HStack {
-                        Button {
-                            saveSelectedSavedScanMetadata()
-                        } label: {
-                            Label("Save Notes", systemImage: "square.and.arrow.down")
+                        HStack {
+                            Button {
+                                saveSelectedSavedScanMetadata()
+                            } label: {
+                                Label("Save Notes", systemImage: "square.and.arrow.down")
+                            }
+
+                            Button {
+                                clearSelectedSavedScanMetadata()
+                            } label: {
+                                Label("Clear Notes", systemImage: "eraser")
+                            }
+                            .disabled(savedScanNotesText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && savedScanTagsText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                            Spacer()
                         }
-
-                        Button {
-                            clearSelectedSavedScanMetadata()
-                        } label: {
-                            Label("Clear Notes", systemImage: "eraser")
-                        }
-                        .disabled(savedScanNotesText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && savedScanTagsText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-
-                        Spacer()
                     }
                 }
             } else {

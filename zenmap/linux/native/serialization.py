@@ -47,7 +47,11 @@ def decode_profiles(payload: str) -> list[ScanProfile]:
 
 
 def encode_saved_scans(scans: list[SavedScan]) -> str:
-    payload = [_encode_value(asdict(scan)) for scan in scans]
+    payload = [
+        _encode_value(asdict(scan))
+        for scan in scans
+        if not scan.ephemeral
+    ]
     return json.dumps(payload, indent=2, sort_keys=True)
 
 

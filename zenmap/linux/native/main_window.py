@@ -68,6 +68,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._apply_settings_to_form()
         self._refresh_profile_dropdown()
         self._refresh_saved_views()
+        self.connect("close-request", self._on_close_request)
         self._update_scan_button_state()
 
     def _profile_by_name(self, name: str) -> ScanProfile:
@@ -305,6 +306,7 @@ class MainWindow(Adw.ApplicationWindow):
             on_delete_scan=self._delete_saved_scan,
             on_clear_scans=self._clear_saved_scans,
             on_save_metadata=self._save_saved_scan_metadata,
+            on_persist_scan=self._persist_saved_scan,
         )
         self._compare_view = CompareView(on_export_report=self._export_comparison_report)
         self._topology_view = TopologyView(on_show_details=self._show_host_details)
@@ -522,6 +524,7 @@ class MainWindow(Adw.ApplicationWindow):
                 command=self._last_command,
                 xml_path=self._last_xml_path,
                 hosts=self._hosts,
+                ephemeral=not self._settings_store.settings.save_scans_by_default,
             )
             self._refresh_saved_views()
         return False
@@ -640,6 +643,7 @@ class MainWindow(Adw.ApplicationWindow):
             command=f"nmap (imported) {Path(path).name}",
             xml_path=path,
             hosts=hosts,
+            ephemeral=not self._settings_store.settings.save_scans_by_default,
         )
         self._refresh_saved_views()
         self._load_saved_scan(saved)
@@ -810,7 +814,42 @@ class MainWindow(Adw.ApplicationWindow):
         if path:
             self._profile_store.export_custom_profiles(path)
 
+    def _persist_saved_scan(self, scan: SavedScan) -> None:
+        if self._scan_history.persist_scan(scan.id):
+            self._refresh_saved_views()
+            self._status_text = "Saved scan permanently"
+            self._status_label.set_label(self._status_text)
+
     def _save_settings(self, settings: AppSettings) -> None:
+        previous = self._settings_store.settings
+        if previous.save_scans_by_default and not settings.save_scans_by_default:
+            dialog = Adw.MessageDialog(
+                transient_for=self,
+                heading="Stop saving scans by default?",
+                body=(
+                    "Scans completed while this is disabled will only be kept for this session "
+                    "and deleted when Zenmap closes. You can still save individual scans from "
+                    "Saved Scans. Continue?"
+                ),
+            )
+            dialog.add_response("cancel", "Cancel")
+            dialog.add_response("disable", "Disable Saving")
+            dialog.set_response_appearance("disable", Adw.ResponseAppearance.DESTRUCTIVE)
+
+            def on_response(message_dialog: Adw.MessageDialog, response: str) -> None:
+                message_dialog.destroy()
+                if response != "disable":
+                    self._settings_view.set_settings(previous)
+                    return
+                self._apply_settings(settings)
+
+            dialog.connect("response", on_response)
+            dialog.present()
+            return
+
+        self._apply_settings(settings)
+
+    def _apply_settings(self, settings: AppSettings) -> None:
         self._settings_store.settings = settings
         self._settings_store.save()
         self._target = settings.default_target
@@ -818,3 +857,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._selected_profile = self._profile_by_name(settings.default_profile_name)
         self._refresh_profile_dropdown()
         self._apply_settings_to_form()
+
+    def _on_close_request(self, _window) -> bool:
+        self._scan_history.cleanup_ephemeral_scans()
+        return False

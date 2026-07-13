@@ -17,6 +17,7 @@ class AppSettings:
     default_target: str = "scanme.nmap.org"
     default_profile_name: str = "Quick Scan"
     nmap_binary: str = "nmap"
+    save_scans_by_default: bool = True
 
 
 class SettingsStore:
@@ -39,4 +40,5 @@ class SettingsStore:
             default_target=str(data.get("default_target", "scanme.nmap.org")),
             default_profile_name=str(data.get("default_profile_name", "Quick Scan")),
             nmap_binary=str(data.get("nmap_binary", "nmap")),
+            save_scans_by_default=bool(data.get("save_scans_by_default", True)),
         )

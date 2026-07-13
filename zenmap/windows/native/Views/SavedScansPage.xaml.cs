@@ -35,6 +35,9 @@ public sealed partial class SavedScansPage : Page, IZenmapPage
         var scan = SelectedScan();
         NotesBox.Text = scan?.Notes ?? "";
         TagsBox.Text = scan?.Tags ?? "";
+        PersistScanButton.IsEnabled = scan?.Ephemeral == true;
+        NotesBox.IsEnabled = scan?.Ephemeral != true;
+        TagsBox.IsEnabled = scan?.Ephemeral != true;
     }
 
     private void LoadButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -85,6 +88,14 @@ public sealed partial class SavedScansPage : Page, IZenmapPage
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
             _state.ClearSavedScans();
+            Refresh();
+        }
+    }
+
+    private void PersistScanButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        if (SelectedScan() is { } scan && _state.PersistSavedScan(scan.Id))
+        {
             Refresh();
         }
     }

@@ -62,6 +62,7 @@ class SavedScan:
     port_count: int
     notes: str = ""
     tags: str = ""
+    ephemeral: bool = False
     id: UUID = field(default_factory=uuid4)
 
 

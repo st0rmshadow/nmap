@@ -67,6 +67,7 @@ struct SavedScan: Identifiable, Hashable, Codable {
     var portCount: Int
     var notes: String
     var tags: String
+    var ephemeral: Bool
 
     init(
         id: UUID = UUID(),
@@ -77,7 +78,8 @@ struct SavedScan: Identifiable, Hashable, Codable {
         hostCount: Int,
         portCount: Int,
         notes: String = "",
-        tags: String = ""
+        tags: String = "",
+        ephemeral: Bool = false
     ) {
         self.id = id
         self.title = title
@@ -88,6 +90,11 @@ struct SavedScan: Identifiable, Hashable, Codable {
         self.portCount = portCount
         self.notes = notes
         self.tags = tags
+        self.ephemeral = ephemeral
+    }
+
+    var displayTitle: String {
+        ephemeral ? "\(title) (session only)" : title
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -113,5 +120,6 @@ struct SavedScan: Identifiable, Hashable, Codable {
         portCount = try container.decode(Int.self, forKey: .portCount)
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
         tags = try container.decodeIfPresent(String.self, forKey: .tags) ?? ""
+        ephemeral = false
     }
 }

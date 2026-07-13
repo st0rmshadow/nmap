@@ -51,6 +51,8 @@ public sealed class SavedScan
     public int PortCount { get; set; }
     public string Notes { get; set; } = "";
     public string Tags { get; set; } = "";
+    public bool Ephemeral { get; set; }
 
     public string ScannedAtLocal => ScannedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+    public string DisplayTitle => Ephemeral ? $"{Title} (session only)" : Title;
 }

@@ -26,6 +26,7 @@ public sealed partial class SettingsPage : Page, IZenmapPage
             ?? _state.Profiles.FirstOrDefault();
         AutoStatsSwitch.IsOn = settings.AutoAddStatsEvery;
         AutoVerboseSwitch.IsOn = settings.AutoAddVerbose;
+        SaveScansSwitch.IsOn = settings.SaveScansByDefault;
         StatsEveryCombo.SelectedIndex = settings.StatsEveryValue switch
         {
             "5s" => 1,
@@ -50,6 +51,7 @@ public sealed partial class SettingsPage : Page, IZenmapPage
             AutoAddStatsEvery = AutoStatsSwitch.IsOn,
             AutoAddVerbose = AutoVerboseSwitch.IsOn,
             StatsEveryValue = statsEvery,
+            SaveScansByDefault = SaveScansSwitch.IsOn,
         });
     }
 }

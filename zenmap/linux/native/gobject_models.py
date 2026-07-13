@@ -80,6 +80,8 @@ class SavedScanRow(GObject.Object):
 
     @GObject.Property(type=str)
     def title(self) -> str:
+        if self._scan.ephemeral:
+            return f"{self._scan.title} (session only)"
         return self._scan.title
 
     @GObject.Property(type=str)

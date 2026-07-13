@@ -37,6 +37,7 @@ public sealed partial class MainWindow : Window
         _state.SavedScansChanged += () => GetPage<ComparePage>()?.Refresh();
         _state.SavedScansChanged += RebuildRecentScansMenu;
         _state.ProfilesChanged += () => GetPage<ProfilesPage>()?.Refresh();
+        _state.DisableSaveScansConfirmationRequested += settings => _ = ConfirmDisableSaveScansAsync(settings);
 
         InitializePages();
         PopulateProfiles();
@@ -57,7 +58,34 @@ public sealed partial class MainWindow : Window
         }
 
         NavigateTo("output");
-        Closed += (_, _) => App.UnregisterWindow(this);
+        Closed += (_, _) =>
+        {
+            _state.CleanupEphemeralScans();
+            App.UnregisterWindow(this);
+        };
+    }
+
+    private async Task ConfirmDisableSaveScansAsync(AppSettings settings)
+    {
+        var dialog = new ContentDialog
+        {
+            Title = "Stop saving scans by default?",
+            Content =
+                "Scans completed while this is disabled will only be kept for this session and deleted when Zenmap closes. "
+                + "You can still save individual scans from Saved Scans. Continue?",
+            PrimaryButtonText = "Disable Saving",
+            CloseButtonText = "Cancel",
+            XamlRoot = Content.XamlRoot,
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            _state.SaveSettings(settings, confirmedDisableSaveScans: true);
+            GetPage<SettingsPage>()?.Refresh();
+            return;
+        }
+
+        GetPage<SettingsPage>()?.Refresh();
     }
 
     private void Root_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
@@ -212,7 +240,7 @@ public sealed partial class MainWindow : Window
 
         foreach (var scan in scans)
         {
-            var item = new MenuFlyoutItem { Text = scan.Title, Tag = scan.Id };
+            var item = new MenuFlyoutItem { Text = scan.DisplayTitle, Tag = scan.Id };
             item.Click += RecentScanItem_Click;
             RecentScansMenu.Items.Add(item);
         }

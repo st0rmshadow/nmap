@@ -21,6 +21,7 @@ extension ContentView {
                 } label: {
                     Label("Open XML", systemImage: "folder")
                 }
+                .labelStyle(.iconOnly)
                 .help("Open Nmap XML")
                 .disabled(isRunning)
 
@@ -29,6 +30,7 @@ extension ContentView {
                 } label: {
                     Label("Save XML", systemImage: "square.and.arrow.down")
                 }
+                .labelStyle(.iconOnly)
                 .help("Save Current XML")
                 .disabled(lastXMLPath.isEmpty)
 
@@ -37,6 +39,7 @@ extension ContentView {
                 } label: {
                     Label("Saved Scans", systemImage: "archivebox")
                 }
+                .labelStyle(.iconOnly)
                 .help("Show Saved Scans")
             }
 
@@ -50,6 +53,7 @@ extension ContentView {
                 } label: {
                     Label("Find", systemImage: "magnifyingglass")
                 }
+                .labelStyle(.iconOnly)
                 .help("Find in Output")
 
                 Button(role: .destructive) {
@@ -57,6 +61,7 @@ extension ContentView {
                 } label: {
                     Label("Stop", systemImage: "stop.fill")
                 }
+                .labelStyle(.iconOnly)
                 .help("Stop Scan")
                 .disabled(!isRunning)
 
@@ -65,6 +70,7 @@ extension ContentView {
                 } label: {
                     Label("Scan", systemImage: "play.fill")
                 }
+                .labelStyle(.iconOnly)
                 .help("Start Scan")
                 .disabled(isRunning || target.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     .keyboardShortcut(.return, modifiers: [])

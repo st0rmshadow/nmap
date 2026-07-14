@@ -33,6 +33,7 @@ extension ContentView {
                     .tag("Settings")
             }
         }
+        .labelStyle(.titleAndIcon)
         .navigationTitle("Nmap")
     }
 
@@ -78,6 +79,7 @@ extension ContentView {
                 .tabItem { Label("Settings", systemImage: "gearshape") }
                 .tag("Settings")
         }
+        .labelStyle(.titleAndIcon)
     }
 
     var footer: some View {

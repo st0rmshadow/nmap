@@ -16,6 +16,12 @@ MAN_DIR="$SHARE_DIR/man/man1"
 LIB_DIR="$RESOURCES_DIR/lib"
 ZIP_NAME="nmap-macOS-arm64-dev.zip"
 
+if [ -x "$ROOT_DIR/nmap" ]; then
+  NMAP_VERSION="$("$ROOT_DIR/nmap" --version | awk '/Nmap version/ { print $3; exit }')"
+else
+  NMAP_VERSION="$(python3 "${ROOT_DIR}/packaging/nmap-version.py")SVN"
+fi
+
 echo "Building native NmapCLI..."
 xcodebuild \
   -project NmapMac.xcodeproj \
@@ -51,9 +57,9 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>7.99SVN</string>
+  <string>${NMAP_VERSION}</string>
   <key>CFBundleVersion</key>
-  <string>7.99SVN</string>
+  <string>${NMAP_VERSION}</string>
   <key>LSMinimumSystemVersion</key>
   <string>26.5</string>
 </dict>

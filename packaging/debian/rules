@@ -20,4 +20,4 @@ override_dh_install:
 
 override_dh_auto_test:
 	python3 -c "import zenmap.linux.native.app"
-	desktop-file-validate debian/tmp/usr/share/applications/org.nmap.ZenmapNativeLinux.desktop
+	desktop-file-validate zenmap/linux/data/org.nmap.ZenmapNativeLinux.desktop

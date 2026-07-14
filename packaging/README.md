@@ -173,47 +173,75 @@ bundle. Use the `release-*.sh` scripts above for native SwiftUI Zenmap.
 
 ## Windows
 
-Native Windows Zenmap is a WinUI/.NET app published into the NSIS staging tree.
+Native Windows Zenmap is a WinUI 3 / .NET 8 app. **The GUI no longer uses
+Python, GTK, or Cygwin** — but the **official combined nmap installer** still
+uses the `mswin32/` Cygwin Makefile and NSIS to bundle CLI tools + Zenmap.
 
-### Verify build (on Windows)
+### Native GUI vs installer tooling (read this first)
+
+| Question | Answer |
+|----------|--------|
+| Is native Zenmap = WinUI / `dotnet publish`? | **Yes.** No Python/GTK. |
+| Does the full nmap Windows *distribution* still use Cygwin + NSIS? | **Yes.** `mswin32/Makefile` orchestrates MSVC builds, staging, signing, and NSIS. Cygwin is the build shell, not the Zenmap runtime. |
+| Can Zenmap ship standalone without NSIS? | **Yes.** `dotnet publish` produces a self-contained `Zenmap.exe` + DLLs you can zip or distribute directly. |
+| Is Cygwin still required to build Zenmap itself? | **No.** Only PowerShell + .NET SDK + VS workload. |
+| Is NSIS required for Zenmap alone? | **No.** NSIS is only for the combined `nmap-${VERSION}-setup.exe`. |
+
+### Path A — Zenmap standalone (PowerShell only)
+
+Minimal distribution of the native GUI only. Requires nmap on PATH or configured
+in Zenmap settings.
 
 ```powershell
-powershell -File zenmap\windows\verify-windows-native.ps1
+cd zenmap\windows
+powershell -File verify-windows-native.ps1
+
+# Or publish a redistributable folder:
+powershell -File build-for-installer.ps1 -OutputDir C:\path\to\Zenmap-dist
+# Produces: C:\path\to\Zenmap-dist\Zenmap.exe (+ WinUI / Windows App SDK DLLs)
 ```
 
-### Installer staging
+Zip `Zenmap-dist\` and ship. No Cygwin, no NSIS, no MSVC needed for this path.
+
+### Path B — Full nmap + Zenmap installer (Cygwin + MSVC + NSIS)
+
+Official release installer bundling nmap.exe, Ncat, Nping, Ndiff, Npcap, and Zenmap.
 
 From Cygwin/MSYS in `mswin32/` after building nmap with MSVC:
 
 ```bash
-make stage          # builds nmap + stages zenmap via build-for-installer.ps1
+make stage          # MSVC nmap + dotnet publish Zenmap via build-for-installer.ps1
 make sign-files     # requires code-signing cert
 make bundle-nsis    # produces nmap-${VERSION}-setup.exe
 make bundle-zip     # CLI zip (Zenmap excluded from OEM zip)
 ```
 
-The native publish step is wired in `mswin32/Makefile` `stage-common`:
+`stage-common` in `mswin32/Makefile` calls PowerShell to publish native Zenmap:
 
 ```powershell
 zenmap/windows/build-for-installer.ps1 -OutputDir mswin32/nmap-${VERSION}/zenmap
 ```
 
-NSIS installs `$INSTDIR\zenmap\Zenmap.exe` (see `mswin32/nsis/Nmap.nsi` and
+NSIS installs `$INSTDIR\zenmap\Zenmap.exe` (see `mswin32/nsis/Nmap.nsi`,
 `SecZenmapFiles` in `nmap-common.nsh`). Shortcuts point at the native executable.
 Use `/ZENMAP=NO` to skip GUI installation.
 
 Requirements on the build host:
 
+- Cygwin/MSYS (Makefile orchestration only)
 - Visual Studio 2019+ (x86 Release for nmap.exe)
-- .NET SDK (for `dotnet publish`)
-- NSIS large-strings build
+- .NET SDK (for `dotnet publish` of Zenmap)
+- NSIS large-strings build (combined installer only)
 - Windows App SDK (via project dependencies)
 
 ---
 
 ## Upstream release checklist
 
-Before tagging nmap 8.0:
+**Do not bump `nmap.h` to 8.0 until upstream approves.** Packaging scripts read
+the current version (7.99) automatically via `packaging/nmap-version.py`.
+
+When upstream approves the 8.0 release:
 
 1. Bump `NMAP_MAJOR` / `NMAP_MINOR` in `nmap.h` (packaging scripts follow automatically).
 2. Run `zenmap/install_scripts/utils/version_update.py X.YY` for Zenmap Python metadata.

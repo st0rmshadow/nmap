@@ -10,6 +10,16 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	cd zenmap/linux && pip install --no-index --find-links=dist/ --no-build-isolation . --prefix=/usr --root=$(CURDIR)/debian/tmp
+	# Pip targets usr/local on Debian-derived systems when installing with --prefix=/usr.
+	if [ -d "$(CURDIR)/debian/tmp/usr/local" ]; then \
+	  for d in bin lib share; do \
+	    if [ -d "$(CURDIR)/debian/tmp/usr/local/$$d" ]; then \
+	      mkdir -p "$(CURDIR)/debian/tmp/usr/$$d"; \
+	      cp -a "$(CURDIR)/debian/tmp/usr/local/$$d"/. "$(CURDIR)/debian/tmp/usr/$$d"/; \
+	    fi; \
+	  done; \
+	  rm -rf "$(CURDIR)/debian/tmp/usr/local"; \
+	fi
 	install -Dpm 0644 docs/zenmap-native.1 debian/tmp/usr/share/man/man1/zenmap-native.1
 	install -Dpm 0644 zenmap/linux/data/org.nmap.ZenmapNativeLinux.desktop debian/tmp/usr/share/applications/org.nmap.ZenmapNativeLinux.desktop
 	install -Dpm 0644 zenmap/zenmapCore/data/pixmaps/zenmap.png debian/tmp/usr/share/icons/hicolor/256x256/apps/zenmap.png

@@ -34,6 +34,11 @@ echo "Verifying bundled nmap..."
 
 echo "Verifying app bundle metadata..."
 /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "${APP_PATH}/Contents/Info.plist"
+if [[ ! -f "${APP_PATH}/Contents/Resources/zenmap.icns" ]]; then
+  echo "Expected app icon not found: ${APP_PATH}/Contents/Resources/zenmap.icns" >&2
+  exit 1
+fi
+/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "${APP_PATH}/Contents/Info.plist"
 /usr/bin/codesign --verify --deep --strict --verbose=0 "${APP_PATH}"
 
 echo "macOS native build verification passed."

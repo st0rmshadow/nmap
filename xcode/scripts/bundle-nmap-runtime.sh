@@ -70,5 +70,19 @@ rm -f "$RES"/nmap-mac-prefixes "$RES"/nmap-os-db "$RES"/nmap-service-probes
 rm -f "$RES"/nse_main.lua "$RES"/nmap.dtd
 rm -rf "$RES/scripts" "$RES/nselib"
 
+ZENMAP_ICON="$ROOT/macosx/zenmap.icns"
+INFO_PLIST="$(dirname "$RES")/Info.plist"
+if [ -f "$ZENMAP_ICON" ]; then
+  cp "$ZENMAP_ICON" "$RES/zenmap.icns"
+  if [ -f "$INFO_PLIST" ]; then
+    /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile zenmap.icns" "$INFO_PLIST" 2>/dev/null || \
+      /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string zenmap.icns" "$INFO_PLIST"
+  else
+    echo "warning: Info.plist not found for app icon metadata: $INFO_PLIST"
+  fi
+else
+  echo "warning: optional Zenmap app icon missing: $ZENMAP_ICON"
+fi
+
 echo "Bundled nmap:"
 NMAPDIR="$SHARE" "$BIN/nmap" --version

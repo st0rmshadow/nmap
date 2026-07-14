@@ -6,6 +6,7 @@
     <RootNamespace>Zenmap.Windows</RootNamespace>
     <AssemblyName>Zenmap</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\zenmap.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -23,5 +24,12 @@
     <!-- Latest stable WASDK (NuGet); 2.2.2-experimental* exists but is not stable. -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Unpackaged WinUI needs the .ico beside the exe for AppWindow.SetIcon. -->
+    <Content Include="Assets\zenmap.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

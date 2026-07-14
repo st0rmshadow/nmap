@@ -29,6 +29,7 @@ public sealed partial class MainWindow : Window
         Title = "Zenmap";
         AppWindow.Title = Title;
         AppWindow.Resize(new SizeInt32(1250, 850));
+        ApplyWindowIcon();
         _state = new ZenmapAppState(
             DispatcherQueue,
             App.SettingsStore,
@@ -112,6 +113,17 @@ public sealed partial class MainWindow : Window
     }
 
     public ZenmapAppState State => _state;
+
+    private void ApplyWindowIcon()
+    {
+        // WinUI unpackaged windows do not pick up ApplicationIcon for title bar / taskbar
+        // unless SetIcon is called with a filesystem .ico path.
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "zenmap.ico");
+        if (File.Exists(iconPath))
+        {
+            AppWindow.SetIcon(iconPath);
+        }
+    }
 
     private void InitializePages()
     {

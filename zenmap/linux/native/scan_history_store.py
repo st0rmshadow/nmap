@@ -16,6 +16,7 @@ from .xdg_paths import saved_scans_dir, saved_scans_index_path, session_scans_di
 class ScanHistoryStore:
     def __init__(self) -> None:
         self.saved_scans: list[SavedScan] = self._load()
+        self._prune_orphan_session_scans()
 
     def add_scan(
         self,
@@ -160,6 +161,13 @@ class ScanHistoryStore:
         merged.sort(key=lambda scan: scan.scanned_at, reverse=True)
         self.saved_scans = [scan for scan in merged if Path(scan.xml_path).is_file()]
         self._save()
+
+    def _prune_orphan_session_scans(self) -> None:
+        directory = session_scans_dir()
+        referenced_paths = {scan.xml_path for scan in self.saved_scans}
+        for path in directory.glob("*.xml"):
+            if str(path) not in referenced_paths:
+                path.unlink(missing_ok=True)
 
     def _load(self) -> list[SavedScan]:
         raw = read_json_file(saved_scans_index_path(), "[]")

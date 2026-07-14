@@ -9,6 +9,7 @@ public sealed class ScanHistoryStore
     public ScanHistoryStore()
     {
         SavedScans = Load();
+        PruneOrphanSessionScans();
     }
 
     public SavedScan AddScan(
@@ -175,6 +176,23 @@ public sealed class ScanHistoryStore
             Ephemeral = scan.Ephemeral,
         };
         Save();
+    }
+
+    private void PruneOrphanSessionScans()
+    {
+        if (!Directory.Exists(WindowsPaths.SessionScansDirectory))
+        {
+            return;
+        }
+
+        var referencedPaths = SavedScans.Select(scan => scan.XmlPath).ToHashSet(StringComparer.Ordinal);
+        foreach (var path in Directory.EnumerateFiles(WindowsPaths.SessionScansDirectory, "*.xml"))
+        {
+            if (!referencedPaths.Contains(path))
+            {
+                TryDelete(path);
+            }
+        }
     }
 
     private List<SavedScan> Load()

@@ -33,13 +33,16 @@ public sealed class ZenmapAppState
     public event Action? ProfilesChanged;
     public event Action<AppSettings>? DisableSaveScansConfirmationRequested;
 
-    public ZenmapAppState(DispatcherQueue dispatcher)
+    public ZenmapAppState(
+        DispatcherQueue dispatcher,
+        SettingsStore settingsStore,
+        ProfileStore profileStore,
+        ScanHistoryStore scanHistoryStore)
     {
         _dispatcher = dispatcher;
-        WindowsPaths.EnsureConfigDirectories();
-        SettingsStore = new SettingsStore();
-        ProfileStore = new ProfileStore();
-        ScanHistoryStore = new ScanHistoryStore();
+        SettingsStore = settingsStore;
+        ProfileStore = profileStore;
+        ScanHistoryStore = scanHistoryStore;
 
         SelectedProfile = ProfileByName(SettingsStore.Settings.DefaultProfileName);
         Target = SettingsStore.Settings.DefaultTarget;

@@ -29,7 +29,11 @@ public sealed partial class MainWindow : Window
         Title = "Zenmap";
         AppWindow.Title = Title;
         AppWindow.Resize(new SizeInt32(1250, 850));
-        _state = new ZenmapAppState(DispatcherQueue);
+        _state = new ZenmapAppState(
+            DispatcherQueue,
+            App.SettingsStore,
+            App.ProfileStore,
+            App.ScanHistoryStore);
         _state.Changed += RefreshChrome;
         // OutputPage subscribes to OutputAppended itself; avoid a second ListView sync
         // that races with auto-scroll on every chunk / completion.
@@ -58,11 +62,7 @@ public sealed partial class MainWindow : Window
         }
 
         NavigateTo("output");
-        Closed += (_, _) =>
-        {
-            _state.CleanupEphemeralScans();
-            App.UnregisterWindow(this);
-        };
+        Closed += (_, _) => App.UnregisterWindow(this);
     }
 
     private async Task ConfirmDisableSaveScansAsync(AppSettings settings)

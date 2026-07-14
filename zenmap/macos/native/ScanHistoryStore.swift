@@ -14,6 +14,7 @@ final class ScanHistoryStore: ObservableObject {
 
     init() {
         savedScans = Self.loadSavedScans()
+        pruneOrphanSessionScans()
     }
 
     func clearSavedScans(deleteFiles: Bool = false) {
@@ -86,6 +87,37 @@ final class ScanHistoryStore: ObservableObject {
         selectedSavedScanIDs = selectedSavedScanIDs.filter { id in
             savedScans.contains(where: { $0.id == id })
         }
+    }
+
+    private func pruneOrphanSessionScans() {
+        guard let sessionDirectory = sessionScansDirectoryURL(),
+              let files = try? FileManager.default.contentsOfDirectory(
+                  at: sessionDirectory,
+                  includingPropertiesForKeys: nil
+              ) else {
+            return
+        }
+
+        let referencedPaths = Set(savedScans.map(\.xmlPath))
+        for fileURL in files where fileURL.pathExtension.lowercased() == "xml" {
+            let path = fileURL.path
+            if !referencedPaths.contains(path) {
+                try? FileManager.default.removeItem(at: fileURL)
+            }
+        }
+    }
+
+    private func sessionScansDirectoryURL() -> URL? {
+        guard let applicationSupportURL = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first else {
+            return nil
+        }
+
+        return applicationSupportURL
+            .appendingPathComponent("Zenmap", isDirectory: true)
+            .appendingPathComponent("SessionScans", isDirectory: true)
     }
 
     private func deleteSavedScanFile(at path: String) {

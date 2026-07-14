@@ -112,9 +112,16 @@ extension ContentView {
         ephemeral: Bool? = nil
     ) {
         let shouldBeEphemeral = ephemeral ?? !saveScansByDefault
-        let durableXMLPath = shouldBeEphemeral
-            ? (copyXMLToSessionScansDirectory(sourcePath: xmlPath, title: title) ?? xmlPath)
-            : (copyXMLToSavedScansDirectory(sourcePath: xmlPath, title: title) ?? xmlPath)
+        let durableXMLPath: String
+        if shouldBeEphemeral {
+            guard let sessionPath = copyXMLToSessionScansDirectory(sourcePath: xmlPath, title: title) else {
+                output += "\nFailed to save ephemeral scan; scan was not added to history."
+                return
+            }
+            durableXMLPath = sessionPath
+        } else {
+            durableXMLPath = copyXMLToSavedScansDirectory(sourcePath: xmlPath, title: title) ?? xmlPath
+        }
 
         let savedScan = SavedScan(
             title: title,

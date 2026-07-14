@@ -188,7 +188,12 @@ extension ContentView {
                     selectedHostID = parsedHosts.first?.id
                 }
                 if finishedProcess.terminationStatus == 0 {
-                    addSavedScan(title: trimmedTarget, command: lastCommand, xmlPath: xmlURL.path, parsedHosts: parsedHosts)
+                    addSavedScan(
+                        title: "\(trimmedTarget) - \(selectedProfile.name)",
+                        command: lastCommand,
+                        xmlPath: xmlURL.path,
+                        parsedHosts: parsedHosts
+                    )
                 }
                 if finishedProcess.terminationStatus == 0 {
                     isUsingEstimatedScanProgress = false
@@ -357,7 +362,7 @@ extension ContentView {
 
             if succeeded {
                 addSavedScan(
-                    title: trimmedTarget,
+                    title: "\(trimmedTarget) - \(selectedProfile.name)",
                     command: lastCommand,
                     xmlPath: xmlURL.path,
                     parsedHosts: parsedHosts

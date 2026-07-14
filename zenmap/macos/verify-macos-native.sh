@@ -3,7 +3,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PROJECT="${REPO_ROOT}/NmapMac.xcodeproj"
-SCHEME="${SCHEME:-NmapNative}"
+SCHEME="${SCHEME:-Zenmap}"
 CONFIGURATION="${CONFIGURATION:-Debug}"
 DERIVED_DATA="${DERIVED_DATA:-${REPO_ROOT}/.xcode-build}"
 

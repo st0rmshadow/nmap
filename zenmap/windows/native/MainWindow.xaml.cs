@@ -102,7 +102,7 @@ public sealed partial class MainWindow : Window
                 return;
             }
 
-            output.ApplyWheelDelta(delta, out _, out _, out _);
+            output.ApplyWheelDelta(delta);
             e.Handled = true;
         }
         catch

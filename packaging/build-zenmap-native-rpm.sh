@@ -13,7 +13,7 @@ tar -C "${ROOT}" \
   --exclude=.git \
   --exclude=.xcode-build \
   --exclude=packaging/rpm-build \
-  -czf "${BUILD_DIR}/SOURCES/nmap-${VERSION}.tar.gz" \
+  -czf "${BUILD_DIR}/SOURCES/nmap-${VERSION}.tgz" \
   --transform "s,^,nmap-${VERSION}/," .
 
 sed "s/@VERSION@/${VERSION}/g" "${ROOT}/zenmap-native.spec.in" > "${SPEC}"

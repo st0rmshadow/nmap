@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
+NMAP_VERSION="${NMAP_VERSION:-$(python3 "${ROOT_DIR}/packaging/nmap-version.py")}"
+
 DIST_DIR="$ROOT_DIR/dist"
 REPLACEMENT_ROOT="$DIST_DIR/replacement-root"
 APPLICATIONS_DIR="$REPLACEMENT_ROOT/Applications"
@@ -48,9 +50,9 @@ make_cli_plist() {
   <key>CFBundleIconFile</key>
   <string>$icon</string>
   <key>CFBundleShortVersionString</key>
-  <string>7.99</string>
+  <string>$NMAP_VERSION</string>
   <key>CFBundleVersion</key>
-  <string>7.99</string>
+  <string>$NMAP_VERSION</string>
 </dict>
 </plist>
 PLIST

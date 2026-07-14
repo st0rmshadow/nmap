@@ -21,6 +21,8 @@ tar -C "${ROOT}" \
   --transform "s,^,nmap-${VERSION}/," .
 
 cp "${ROOT}/packaging/arch/PKGBUILD" "${PKGDIR}/PKGBUILD"
+sed -i.bak "s/^pkgver=.*/pkgver=${VERSION}/" "${PKGDIR}/PKGBUILD"
+rm -f "${PKGDIR}/PKGBUILD.bak"
 cd "${PKGDIR}"
 makepkg -sf --noconfirm
 

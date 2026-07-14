@@ -11,7 +11,7 @@ USR_LOCAL_DIR="$REPLACEMENT_ROOT/usr/local"
 PKG_WORK_DIR="$DIST_DIR/pkg-work"
 PKG_OUT_DIR="$DIST_DIR/pkg"
 IDENTIFIER_PREFIX="${IDENTIFIER_PREFIX:-org.insecure.nmap}"
-VERSION="${VERSION:-7.99}"
+VERSION="${VERSION:-$(python3 "${ROOT_DIR}/packaging/nmap-version.py")}"
 
 NMAP_PKG="$PKG_OUT_DIR/Nmap.pkg"
 NCAT_PKG="$PKG_OUT_DIR/Ncat.pkg"
@@ -172,7 +172,7 @@ pkgbuild \
 cat > "$PKG_WORK_DIR/Distribution.xml" <<XML
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="1">
-  <title>Nmap 7.99 for macOS</title>
+  <title>Nmap ${VERSION} for macOS</title>
   <organization>org.insecure</organization>
   <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
   <options customize="always" require-scripts="false" rootVolumeOnly="true"/>

@@ -120,20 +120,12 @@ public sealed partial class OutputPage : Page, IZenmapPage
         }
     }
 
-    /// <summary>No-op: Win32 EDIT overlay removed; XAML TextBlock is always the visible output.</summary>
-    public void SetOutputVisible(bool visible) => _ = visible;
-
-    public bool ApplyWheelDelta(
-        int mouseWheelDelta,
-        out double before,
-        out double after,
-        out double scrollable)
+    public bool ApplyWheelDelta(int mouseWheelDelta)
     {
-        before = OutputScrollViewer.VerticalOffset;
-        scrollable = OutputScrollViewer.ScrollableHeight;
+        var before = OutputScrollViewer.VerticalOffset;
+        var scrollable = OutputScrollViewer.ScrollableHeight;
         if (mouseWheelDelta == 0 || scrollable <= 0)
         {
-            after = before;
             return false;
         }
 
@@ -143,12 +135,8 @@ public sealed partial class OutputPage : Page, IZenmapPage
             0,
             scrollable);
         OutputScrollViewer.ChangeView(null, target, null, disableAnimation: true);
-        after = OutputScrollViewer.VerticalOffset;
-        return Math.Abs(after - before) > 0.5;
+        return Math.Abs(OutputScrollViewer.VerticalOffset - before) > 0.5;
     }
-
-    private void ApplyWheelDelta(int delta) =>
-        ApplyWheelDelta(delta, out _, out _, out _);
 
     private void OutputScrollViewer_PointerEntered(object sender, PointerRoutedEventArgs e) =>
         OutputScrollViewer.Focus(FocusState.Pointer);

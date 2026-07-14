@@ -178,6 +178,50 @@ public sealed class ScanHistoryStore
         Save();
     }
 
+    public void MergeImported(IEnumerable<SavedScan> importedScans)
+    {
+        var merged = new List<SavedScan>(SavedScans);
+        foreach (var imported in importedScans)
+        {
+            var existingIndex = merged.FindIndex(
+                scan => scan.Id == imported.Id || scan.XmlPath == imported.XmlPath);
+            if (existingIndex < 0)
+            {
+                merged.Add(imported);
+            }
+            else
+            {
+                merged[existingIndex] = imported;
+            }
+        }
+
+        SavedScans = merged
+            .Where(scan => File.Exists(scan.XmlPath))
+            .OrderByDescending(scan => scan.ScannedAt)
+            .ToList();
+        Save();
+    }
+
+    public int ExportHistory(string destination)
+    {
+        var persistentScans = SavedScans.Where(scan => !scan.Ephemeral).ToList();
+        File.WriteAllText(destination, JsonSerialization.EncodeSavedScans(persistentScans));
+        return persistentScans.Count;
+    }
+
+    public int ImportHistory(string source)
+    {
+        var imported = JsonSerialization.DecodeSavedScans(File.ReadAllText(source))
+            .Where(scan => !string.IsNullOrWhiteSpace(scan.Title) && File.Exists(scan.XmlPath))
+            .ToList();
+        if (imported.Count > 0)
+        {
+            MergeImported(imported);
+        }
+
+        return imported.Count;
+    }
+
     private void PruneOrphanSessionScans()
     {
         if (!Directory.Exists(WindowsPaths.SessionScansDirectory))

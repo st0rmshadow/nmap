@@ -26,7 +26,9 @@ class SettingsView(Gtk.Box):
         self._nmap_entry = Gtk.Entry()
         self._target_entry = Gtk.Entry()
         self._profile_entry = Gtk.Entry()
-        self._stats_entry = Gtk.Entry()
+        self._stats_options = ["1s", "5s", "10s", "30s", "60s"]
+        self._stats_model = Gtk.StringList.new(self._stats_options)
+        self._stats_dropdown = Gtk.DropDown(model=self._stats_model)
         self._verbose_switch = Gtk.Switch()
         self._stats_switch = Gtk.Switch()
         self._save_scans_switch = Gtk.Switch()
@@ -35,7 +37,7 @@ class SettingsView(Gtk.Box):
             ("Nmap binary", self._nmap_entry),
             ("Default target", self._target_entry),
             ("Default profile name", self._profile_entry),
-            ("Stats every value", self._stats_entry),
+            ("Stats every value", self._stats_dropdown),
         )
         for index, (label, widget) in enumerate(rows):
             grid.attach(Gtk.Label(label=label, xalign=0), 0, index, 1, 1)
@@ -60,7 +62,11 @@ class SettingsView(Gtk.Box):
         self._nmap_entry.set_text(settings.nmap_binary)
         self._target_entry.set_text(settings.default_target)
         self._profile_entry.set_text(settings.default_profile_name)
-        self._stats_entry.set_text(settings.stats_every_value)
+        try:
+            stats_index = self._stats_options.index(settings.stats_every_value)
+        except ValueError:
+            stats_index = 0
+        self._stats_dropdown.set_selected(stats_index)
         self._stats_switch.set_active(settings.auto_add_stats_every)
         self._verbose_switch.set_active(settings.auto_add_verbose)
         self._save_scans_switch.set_active(settings.save_scans_by_default)
@@ -70,7 +76,7 @@ class SettingsView(Gtk.Box):
             nmap_binary=self._nmap_entry.get_text().strip() or "nmap",
             default_target=self._target_entry.get_text().strip(),
             default_profile_name=self._profile_entry.get_text().strip() or "Quick Scan",
-            stats_every_value=self._stats_entry.get_text().strip() or "1s",
+            stats_every_value=self._stats_options[self._stats_dropdown.get_selected()],
             auto_add_stats_every=self._stats_switch.get_active(),
             auto_add_verbose=self._verbose_switch.get_active(),
             save_scans_by_default=self._save_scans_switch.get_active(),

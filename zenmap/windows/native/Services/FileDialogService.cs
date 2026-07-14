@@ -57,6 +57,19 @@ public static class FileDialogService
         return folder?.Path;
     }
 
+    public static async Task<string?> PickSaveJsonAsync(Window window, string suggestedName)
+    {
+        var picker = new FileSavePicker
+        {
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+            SuggestedFileName = suggestedName,
+        };
+        picker.FileTypeChoices.Add("JSON", [".json"]);
+        Initialize(window, picker);
+        var file = await picker.PickSaveFileAsync();
+        return file?.Path;
+    }
+
     public static async Task<string?> PickOpenJsonAsync(Window window)
     {
         var picker = new FileOpenPicker

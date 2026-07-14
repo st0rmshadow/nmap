@@ -162,6 +162,21 @@ class ScanHistoryStore:
         self.saved_scans = [scan for scan in merged if Path(scan.xml_path).is_file()]
         self._save()
 
+    def export_history(self, destination: str) -> int:
+        persistent_scans = [scan for scan in self.saved_scans if not scan.ephemeral]
+        Path(destination).write_text(encode_saved_scans(persistent_scans), encoding="utf-8")
+        return len(persistent_scans)
+
+    def import_history(self, source: str) -> list[SavedScan]:
+        imported = [
+            scan
+            for scan in decode_saved_scans(Path(source).read_text(encoding="utf-8"))
+            if scan.title.strip() and Path(scan.xml_path).is_file()
+        ]
+        if imported:
+            self.merge_imported(imported)
+        return imported
+
     def _prune_orphan_session_scans(self) -> None:
         directory = session_scans_dir()
         referenced_paths = {scan.xml_path for scan in self.saved_scans}

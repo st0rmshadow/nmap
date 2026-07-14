@@ -270,6 +270,7 @@ extension ContentView {
             let data = try Data(contentsOf: url)
             let importedScans = try JSONDecoder().decode([SavedScan].self, from: data)
                 .filter { !$0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                .filter { FileManager.default.fileExists(atPath: $0.xmlPath) }
 
             guard !importedScans.isEmpty else {
                 output += "\nNo saved scan history items found in selected JSON file."

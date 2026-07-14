@@ -186,8 +186,13 @@ public sealed partial class MainWindow : Window
         ScanButton.IsEnabled = canScan;
         ScanButtonLabel.Text = running ? "Running..." : "Scan";
         StopButton.IsEnabled = running;
+        ToolbarScanButton.IsEnabled = canScan;
+        ToolbarStopButton.IsEnabled = running;
+        ToolTipService.SetToolTip(ToolbarScanButton, running ? "Scan running..." : "Start Scan");
         OpenXmlButton.IsEnabled = !running;
         SaveXmlButton.IsEnabled = canSaveXml;
+        HeaderProgressRing.IsActive = running;
+        HeaderProgressRing.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
         StatusDot.Fill = running ? _activeBrush : _idleBrush;
 
         MenuOpenScan.IsEnabled = !running;
@@ -296,8 +301,10 @@ public sealed partial class MainWindow : Window
         _state.Target = TargetBox.Text;
         _state.Arguments = ArgumentsBox.Text;
         CommandPreviewText.Text = _state.CommandPreview;
-        ScanButton.IsEnabled = !_state.IsScanRunning && !string.IsNullOrWhiteSpace(_state.Target);
-        MenuStartScan.IsEnabled = ScanButton.IsEnabled;
+        var canScan = !_state.IsScanRunning && !string.IsNullOrWhiteSpace(_state.Target);
+        ScanButton.IsEnabled = canScan;
+        ToolbarScanButton.IsEnabled = canScan;
+        MenuStartScan.IsEnabled = canScan;
     }
 
     private void ProfileCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)

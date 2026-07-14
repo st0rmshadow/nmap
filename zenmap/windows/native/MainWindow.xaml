@@ -6,6 +6,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -136,9 +137,88 @@
             </MenuBarItem>
         </MenuBar>
 
+        <!-- macOS NavigationSplitView .toolbar twin: icon-only ToolbarItemGroups, trailing -->
+        <Border
+            Grid.Row="1"
+            Padding="12,6,16,6"
+            BorderThickness="0,0,0,1"
+            BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+            Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="10"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center">
+                <!-- ToolbarItemGroup 1: document actions -->
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Button
+                        x:Name="OpenXmlButton"
+                        Style="{StaticResource ZenmapIconToolbarButtonStyle}"
+                        Click="OpenXmlButton_Click"
+                        ToolTipService.ToolTip="Open Nmap XML"
+                        AutomationProperties.Name="Open XML">
+                        <FontIcon Glyph="&#xE8B7;" Style="{StaticResource ZenmapIconToolbarGlyphStyle}" />
+                    </Button>
+                    <Button
+                        x:Name="SaveXmlButton"
+                        Style="{StaticResource ZenmapIconToolbarButtonStyle}"
+                        Click="SaveXmlButton_Click"
+                        ToolTipService.ToolTip="Save Current XML"
+                        AutomationProperties.Name="Save XML"
+                        IsEnabled="False">
+                        <FontIcon Glyph="&#xE74E;" Style="{StaticResource ZenmapIconToolbarGlyphStyle}" />
+                    </Button>
+                    <Button
+                        x:Name="SavedScansButton"
+                        Style="{StaticResource ZenmapIconToolbarButtonStyle}"
+                        Click="SavedScansButton_Click"
+                        ToolTipService.ToolTip="Show Saved Scans"
+                        AutomationProperties.Name="Saved Scans">
+                        <FontIcon Glyph="&#xE7B8;" Style="{StaticResource ZenmapIconToolbarGlyphStyle}" />
+                    </Button>
+                </StackPanel>
+
+                <Border
+                    Width="1"
+                    Height="18"
+                    Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    VerticalAlignment="Center"
+                    Opacity="0.7" />
+
+                <!-- ToolbarItemGroup 2: Find | Stop | Scan -->
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Button
+                        x:Name="FindButton"
+                        Style="{StaticResource ZenmapIconToolbarButtonStyle}"
+                        Click="FindButton_Click"
+                        ToolTipService.ToolTip="Find in Output"
+                        AutomationProperties.Name="Find">
+                        <FontIcon Glyph="&#xE721;" Style="{StaticResource ZenmapIconToolbarGlyphStyle}" />
+                    </Button>
+                    <Button
+                        x:Name="ToolbarStopButton"
+                        Style="{StaticResource ZenmapIconToolbarDestructiveButtonStyle}"
+                        Click="StopButton_Click"
+                        ToolTipService.ToolTip="Stop Scan"
+                        AutomationProperties.Name="Stop"
+                        IsEnabled="False">
+                        <FontIcon Glyph="&#xE71A;" Style="{StaticResource ZenmapIconToolbarGlyphStyle}" />
+                    </Button>
+                    <Button
+                        x:Name="ToolbarScanButton"
+                        Style="{StaticResource ZenmapIconToolbarPrimaryButtonStyle}"
+                        Click="ScanButton_Click"
+                        ToolTipService.ToolTip="Start Scan"
+                        AutomationProperties.Name="Scan">
+                        <FontIcon Glyph="&#xE768;" Style="{StaticResource ZenmapIconToolbarGlyphStyle}" />
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
     <NavigationView
         x:Name="NavView"
-        Grid.Row="1"
+        Grid.Row="2"
         PaneDisplayMode="Left"
         IsBackButtonVisible="Collapsed"
         IsSettingsVisible="False"
@@ -229,135 +309,91 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock
+                    <!-- macOS header: title left, labeled Stop/Scan right (below icon toolbar) -->
+                    <StackPanel
                         Grid.Row="0"
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
-                        Text="Nmap for Windows"
-                        Style="{StaticResource ZenmapHeroTitleStyle}" />
-                    <!-- macOS ToolbarItemGroup twin: Open/Save/Saved | Find/Stop/Scan -->
+                        Orientation="Vertical"
+                        Spacing="2"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            Text="Nmap for Windows"
+                            Style="{StaticResource ZenmapHeroTitleStyle}" />
+                        <TextBlock
+                            Text="Native WinUI front end with UAC support and local saved-scan history"
+                            Style="{StaticResource ZenmapSubtitleStyle}"
+                            Margin="0" />
+                    </StackPanel>
+
                     <StackPanel
                         Grid.Row="0"
                         Grid.Column="2"
                         Orientation="Horizontal"
-                        Spacing="12"
-                        VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <Button
-                                x:Name="OpenXmlButton"
-                                Style="{StaticResource ZenmapToolbarButtonStyle}"
-                                Click="OpenXmlButton_Click"
-                                ToolTipService.ToolTip="Open Nmap XML">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE8B7;" Style="{StaticResource ZenmapToolbarIconStyle}" />
-                                    <TextBlock Text="Open XML" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                            <Button
-                                x:Name="SaveXmlButton"
-                                Style="{StaticResource ZenmapToolbarButtonStyle}"
-                                Click="SaveXmlButton_Click"
-                                ToolTipService.ToolTip="Save Current XML"
-                                IsEnabled="False">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE74E;" Style="{StaticResource ZenmapToolbarIconStyle}" />
-                                    <TextBlock Text="Save XML" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                            <Button
-                                x:Name="SavedScansButton"
-                                Style="{StaticResource ZenmapToolbarButtonStyle}"
-                                Click="SavedScansButton_Click"
-                                ToolTipService.ToolTip="Show Saved Scans">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE7B8;" Style="{StaticResource ZenmapToolbarIconStyle}" />
-                                    <TextBlock Text="Saved Scans" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-
-                        <Border
-                            Width="1"
-                            Height="16"
-                            Background="{ThemeResource DividerStrokeColorDefaultBrush}"
-                            VerticalAlignment="Center"
-                            Opacity="0.7" />
-
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <Button
-                                x:Name="FindButton"
-                                Style="{StaticResource ZenmapToolbarButtonStyle}"
-                                Click="FindButton_Click"
-                                ToolTipService.ToolTip="Find in Output">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE721;" Style="{StaticResource ZenmapToolbarIconStyle}" />
-                                    <TextBlock Text="Find" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                            <Button
-                                x:Name="StopButton"
-                                Style="{StaticResource ZenmapToolbarDestructiveButtonStyle}"
-                                Click="StopButton_Click"
-                                ToolTipService.ToolTip="Stop Scan"
-                                IsEnabled="False">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE71A;" Style="{StaticResource ZenmapToolbarIconStyle}" />
-                                    <TextBlock Text="Stop" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                            <Button
-                                x:Name="ScanButton"
-                                Style="{StaticResource ZenmapToolbarPrimaryButtonStyle}"
-                                Click="ScanButton_Click"
-                                ToolTipService.ToolTip="Start Scan">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE768;" Style="{StaticResource ZenmapToolbarIconStyle}" />
-                                    <TextBlock x:Name="ScanButtonLabel" Text="Scan" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
+                        Spacing="8"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Right">
+                        <ProgressRing
+                            x:Name="HeaderProgressRing"
+                            Width="18"
+                            Height="18"
+                            IsActive="False"
+                            Visibility="Collapsed" />
+                        <Button
+                            x:Name="StopButton"
+                            Style="{StaticResource ZenmapToolbarDestructiveButtonStyle}"
+                            Click="StopButton_Click"
+                            ToolTipService.ToolTip="Stop Scan"
+                            IsEnabled="False">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE71A;" Style="{StaticResource ZenmapToolbarIconStyle}" />
+                                <TextBlock Text="Stop" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            x:Name="ScanButton"
+                            Style="{StaticResource ZenmapToolbarPrimaryButtonStyle}"
+                            Click="ScanButton_Click"
+                            ToolTipService.ToolTip="Start Scan">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE768;" Style="{StaticResource ZenmapToolbarIconStyle}" />
+                                <TextBlock x:Name="ScanButtonLabel" Text="Scan" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
 
-                    <TextBlock
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="3"
-                        Text="Native WinUI front end with UAC support and local saved-scan history"
-                        Style="{StaticResource ZenmapSubtitleStyle}" />
-
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Target" Style="{StaticResource ZenmapFormLabelStyle}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Target" Style="{StaticResource ZenmapFormLabelStyle}" />
                     <TextBox
                         x:Name="TargetBox"
-                        Grid.Row="2"
+                        Grid.Row="1"
                         Grid.Column="1"
                         Grid.ColumnSpan="2"
                         PlaceholderText="scanme.nmap.org, 192.168.1.0/24, etc."
                         TextChanged="FormFieldChanged" />
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Profile" Style="{StaticResource ZenmapFormLabelStyle}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Profile" Style="{StaticResource ZenmapFormLabelStyle}" />
                     <ComboBox
                         x:Name="ProfileCombo"
-                        Grid.Row="3"
+                        Grid.Row="2"
                         Grid.Column="1"
                         Grid.ColumnSpan="2"
                         HorizontalAlignment="Stretch"
                         SelectionChanged="ProfileCombo_SelectionChanged" />
 
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Arguments" Style="{StaticResource ZenmapFormLabelStyle}" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Arguments" Style="{StaticResource ZenmapFormLabelStyle}" />
                     <TextBox
                         x:Name="ArgumentsBox"
-                        Grid.Row="4"
+                        Grid.Row="3"
                         Grid.Column="1"
                         Grid.ColumnSpan="2"
                         FontFamily="Consolas"
                         TextChanged="FormFieldChanged" />
 
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Preview" Style="{StaticResource ZenmapFormLabelStyle}" VerticalAlignment="Top" Margin="0,8,12,0" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Preview" Style="{StaticResource ZenmapFormLabelStyle}" VerticalAlignment="Top" Margin="0,8,12,0" />
                     <Border
-                        Grid.Row="5"
+                        Grid.Row="4"
                         Grid.Column="1"
                         Grid.ColumnSpan="2"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -373,7 +409,7 @@
 
                     <TextBlock
                         x:Name="ProfileDescriptionText"
-                        Grid.Row="6"
+                        Grid.Row="5"
                         Grid.Column="0"
                         Grid.ColumnSpan="3"
                         Style="{StaticResource ZenmapDimTextStyle}" />

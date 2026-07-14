@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.UI.Xaml.Controls;
 using Zenmap.Windows.Models;
 using Zenmap.Windows.Services;
@@ -21,9 +22,35 @@ public sealed partial class SavedScansPage : Page, IZenmapPage
 
     public void Refresh()
     {
-        var scans = ResultsFiltering.FilterSavedScans(_state.ScanHistoryStore.SavedScans, FilterBox.Text).ToList();
+        var allScans = _state.ScanHistoryStore.SavedScans;
+        var scans = ResultsFiltering.FilterSavedScans(allScans, FilterBox.Text).ToList();
         ScansList.ItemsSource = scans;
         CountText.Text = $"{scans.Count}";
+        UpdateEmptyState(allScans, scans);
+    }
+
+    private void UpdateEmptyState(IReadOnlyList<SavedScan> allScans, IReadOnlyList<SavedScan> filteredScans)
+    {
+        if (allScans.Count == 0)
+        {
+            EmptyStateText.Text = _state.SettingsStore.Settings.SaveScansByDefault
+                ? "Completed scans are saved automatically under AppData."
+                : "Completed scans and opened XML files will appear here for quick reload during this app session.";
+            EmptyStateText.Visibility = Microsoft.UI.Xaml.Visibility.Visible;
+            ScansList.Visibility = Microsoft.UI.Xaml.Visibility.Collapsed;
+            return;
+        }
+
+        if (filteredScans.Count == 0)
+        {
+            EmptyStateText.Text = "No saved scans match the current filter.";
+            EmptyStateText.Visibility = Microsoft.UI.Xaml.Visibility.Visible;
+            ScansList.Visibility = Microsoft.UI.Xaml.Visibility.Collapsed;
+            return;
+        }
+
+        EmptyStateText.Visibility = Microsoft.UI.Xaml.Visibility.Collapsed;
+        ScansList.Visibility = Microsoft.UI.Xaml.Visibility.Visible;
     }
 
     private SavedScan? SelectedScan() => ScansList.SelectedItem as SavedScan;
@@ -62,6 +89,25 @@ public sealed partial class SavedScansPage : Page, IZenmapPage
         if (!string.IsNullOrWhiteSpace(path))
         {
             _state.ImportXmlFile(path);
+        }
+    }
+
+    private async void ImportHistoryButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        var path = await FileDialogService.PickOpenJsonAsync(_window);
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            _state.ImportSavedScanHistory(path);
+            Refresh();
+        }
+    }
+
+    private async void ExportHistoryButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        var path = await FileDialogService.PickSaveJsonAsync(_window, "nmap-saved-scan-history.json");
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            _state.ExportSavedScanHistory(path);
         }
     }
 

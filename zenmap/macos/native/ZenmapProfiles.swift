@@ -8,9 +8,9 @@ extension ContentView {
             description: "Fast scan of common ports."
         ),
         ScanProfile(
-            name: "TCP Connect over VPN",
+            name: "TCP Connect",
             arguments: "-sT -sV -T4 -v",
-            description: "Uses TCP connect scanning to avoid raw-packet SYN scan behavior that can be unreliable or noisy on macOS VPN interfaces.",
+            description: "Uses TCP connect scanning when raw-packet SYN scans are blocked or unreliable on restricted networks.",
             isBuiltIn: true
         ),
         ScanProfile(

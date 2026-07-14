@@ -117,7 +117,11 @@ extension ContentView {
                 .disabled(selectedSavedScanIDsForDeletion.isEmpty)
             }
             if scanHistory.savedScans.isEmpty {
-                emptyResultsView("Completed scans and opened XML files will appear here for quick reload during this app session.")
+                emptyResultsView(
+                    saveScansByDefault
+                        ? "Completed scans are saved automatically and will appear here."
+                        : "Completed scans and opened XML files will appear here for quick reload during this app session."
+                )
             } else {
                 savedScansFilterBar
 

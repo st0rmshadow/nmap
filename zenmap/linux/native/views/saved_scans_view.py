@@ -26,6 +26,8 @@ class SavedScansView(Gtk.Box):
         on_clear_scans,
         on_save_metadata,
         on_persist_scan,
+        on_import_history,
+        on_export_history,
     ) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         self._on_load_scan = on_load_scan
@@ -35,8 +37,11 @@ class SavedScansView(Gtk.Box):
         self._on_clear_scans = on_clear_scans
         self._on_save_metadata = on_save_metadata
         self._on_persist_scan = on_persist_scan
+        self._on_import_history = on_import_history
+        self._on_export_history = on_export_history
         self._scans: list[SavedScan] = []
         self._filter_text = ""
+        self._save_scans_by_default = True
         self._store = Gio.ListStore.new(SavedScanRow)
         self._table, self._selection = build_column_view(
             self._store,
@@ -48,7 +53,7 @@ class SavedScansView(Gtk.Box):
                 ("Command", "command"),
             ],
         )
-        self._empty = empty_state("Completed scans are saved automatically under XDG config.")
+        self._empty = empty_state(self._empty_state_message())
         self._stack = Gtk.Stack()
         self._stack.set_vexpand(True)
         self._stack.add_named(self._table, "table")
@@ -67,12 +72,16 @@ class SavedScansView(Gtk.Box):
         self._load_button = Gtk.Button(label="Load")
         self._open_button = Gtk.Button(label="Open XML")
         self._import_button = Gtk.Button(label="Import XML")
+        self._import_history_button = Gtk.Button(label="Import History")
+        self._export_history_button = Gtk.Button(label="Export History")
         self._delete_button = Gtk.Button(label="Delete")
         self._persist_button = Gtk.Button(label="Save Scan")
         self._clear_button = Gtk.Button(label="Clear All")
         self._load_button.connect("clicked", lambda *_: self._load_selected())
         self._open_button.connect("clicked", lambda *_: self._open_selected())
         self._import_button.connect("clicked", lambda *_: self._on_import_xml())
+        self._import_history_button.connect("clicked", lambda *_: self._on_import_history())
+        self._export_history_button.connect("clicked", lambda *_: self._on_export_history())
         self._delete_button.connect("clicked", lambda *_: self._delete_selected())
         self._persist_button.connect("clicked", lambda *_: self._persist_selected())
         self._clear_button.connect("clicked", lambda *_: self._on_clear_scans())
@@ -80,6 +89,8 @@ class SavedScansView(Gtk.Box):
             self._load_button,
             self._open_button,
             self._import_button,
+            self._import_history_button,
+            self._export_history_button,
             self._delete_button,
             self._persist_button,
             self._clear_button,
@@ -109,6 +120,19 @@ class SavedScansView(Gtk.Box):
         self._scans = scans
         self._refresh()
 
+    def set_save_scans_by_default(self, enabled: bool) -> None:
+        self._save_scans_by_default = enabled
+        if not self._filter_text.strip() and not self._scans:
+            self._empty.get_first_child().set_label(self._empty_state_message())
+
+    def _empty_state_message(self) -> str:
+        if self._save_scans_by_default:
+            return "Completed scans are saved automatically under XDG config."
+        return (
+            "Completed scans and opened XML files will appear here for quick reload "
+            "during this app session."
+        )
+
     def selected_scan(self) -> SavedScan | None:
         position = self._selection.get_selected()
         if position == Gtk.INVALID_LIST_POSITION:
@@ -132,6 +156,7 @@ class SavedScansView(Gtk.Box):
         )
         self._count_label.set_label(count_text)
         if not self._scans:
+            self._empty.get_first_child().set_label(self._empty_state_message())
             self._stack.set_visible_child_name("empty")
         elif not filtered:
             self._stack.set_visible_child_name("empty")

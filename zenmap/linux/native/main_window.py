@@ -307,6 +307,8 @@ class MainWindow(Adw.ApplicationWindow):
             on_clear_scans=self._clear_saved_scans,
             on_save_metadata=self._save_saved_scan_metadata,
             on_persist_scan=self._persist_saved_scan,
+            on_import_history=self._import_saved_scan_history,
+            on_export_history=self._export_saved_scan_history,
         )
         self._compare_view = CompareView(on_export_report=self._export_comparison_report)
         self._topology_view = TopologyView(on_show_details=self._show_host_details)
@@ -370,6 +372,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._profile_description.set_label(self._selected_profile.description)
         self._preview_label.set_label(self._command_preview)
         self._settings_view.set_settings(settings)
+        self._saved_scans_view.set_save_scans_by_default(settings.save_scans_by_default)
         self._update_scan_context()
 
     def _refresh_profile_dropdown(self) -> None:
@@ -386,6 +389,9 @@ class MainWindow(Adw.ApplicationWindow):
     def _refresh_saved_views(self) -> None:
         scans = self._scan_history.saved_scans
         self._saved_scans_view.set_scans(scans)
+        self._saved_scans_view.set_save_scans_by_default(
+            self._settings_store.settings.save_scans_by_default
+        )
         self._compare_view.set_scans(scans)
 
     @property
@@ -819,6 +825,49 @@ class MainWindow(Adw.ApplicationWindow):
             self._refresh_saved_views()
             self._status_text = "Saved scan permanently"
             self._status_label.set_label(self._status_text)
+
+    def _import_saved_scan_history(self) -> None:
+        dialog = Gtk.FileDialog(title="Import Saved Scan History")
+        dialog.open(self, None, self._on_import_saved_scan_history_selected)
+
+    def _on_import_saved_scan_history_selected(
+        self,
+        dialog: Gtk.FileDialog,
+        result: Gio.AsyncResult,
+    ) -> None:
+        try:
+            file_obj = dialog.open_finish(result)
+        except GLib.Error:
+            return
+        path = file_obj.get_path()
+        if not path:
+            return
+        imported = self._scan_history.import_history(path)
+        if imported:
+            self._refresh_saved_views()
+            self._status_text = f"Imported {len(imported)} saved scan(s)"
+            self._status_label.set_label(self._status_text)
+
+    def _export_saved_scan_history(self) -> None:
+        dialog = Gtk.FileDialog(title="Export Saved Scan History")
+        dialog.set_initial_name("nmap-saved-scan-history.json")
+        dialog.save(self, None, self._on_export_saved_scan_history_selected)
+
+    def _on_export_saved_scan_history_selected(
+        self,
+        dialog: Gtk.FileDialog,
+        result: Gio.AsyncResult,
+    ) -> None:
+        try:
+            file_obj = dialog.save_finish(result)
+        except GLib.Error:
+            return
+        path = file_obj.get_path()
+        if not path:
+            return
+        exported_count = self._scan_history.export_history(path)
+        self._status_text = f"Exported {exported_count} saved scan(s)"
+        self._status_label.set_label(self._status_text)
 
     def _save_settings(self, settings: AppSettings) -> None:
         previous = self._settings_store.settings

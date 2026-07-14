@@ -250,6 +250,20 @@ public sealed class ZenmapAppState
         SavedScansChanged?.Invoke();
     }
 
+    public int ExportSavedScanHistory(string destination) =>
+        ScanHistoryStore.ExportHistory(destination);
+
+    public int ImportSavedScanHistory(string source)
+    {
+        var importedCount = ScanHistoryStore.ImportHistory(source);
+        if (importedCount > 0)
+        {
+            SavedScansChanged?.Invoke();
+        }
+
+        return importedCount;
+    }
+
     public void UseProfile(ScanProfile profile) => SelectProfile(profile);
 
     public void AddCustomProfile(string name, string arguments, string description)

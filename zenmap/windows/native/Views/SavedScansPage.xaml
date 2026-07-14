@@ -31,31 +31,44 @@
             PlaceholderText="Filter saved scans by title, command, date, tags, or notes"
             TextChanged="FilterBox_TextChanged" />
 
-        <ListView x:Name="ScansList" Grid.Row="2" SelectionChanged="ScansList_SelectionChanged">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Grid ColumnSpacing="12" Padding="4,6">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="140" />
-                            <ColumnDefinition Width="160" />
-                            <ColumnDefinition Width="70" />
-                            <ColumnDefinition Width="70" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding ScannedAtLocal}" Style="{StaticResource ZenmapDimTextStyle}" />
-                        <TextBlock Grid.Column="1" Text="{Binding DisplayTitle}" FontWeight="SemiBold" />
-                        <TextBlock Grid.Column="2" Text="{Binding HostCount}" />
-                        <TextBlock Grid.Column="3" Text="{Binding PortCount}" />
-                        <TextBlock Grid.Column="4" Text="{Binding Command}" FontFamily="Consolas" TextTrimming="CharacterEllipsis" />
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+        <Grid Grid.Row="2">
+            <ListView x:Name="ScansList" SelectionChanged="ScansList_SelectionChanged">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnSpacing="12" Padding="4,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="160" />
+                                <ColumnDefinition Width="70" />
+                                <ColumnDefinition Width="70" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding ScannedAtLocal}" Style="{StaticResource ZenmapDimTextStyle}" />
+                            <TextBlock Grid.Column="1" Text="{Binding DisplayTitle}" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="2" Text="{Binding HostCount}" />
+                            <TextBlock Grid.Column="3" Text="{Binding PortCount}" />
+                            <TextBlock Grid.Column="4" Text="{Binding Command}" FontFamily="Consolas" TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <TextBlock
+                x:Name="EmptyStateText"
+                Style="{StaticResource ZenmapDimTextStyle}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                TextAlignment="Center"
+                TextWrapping="Wrap"
+                MaxWidth="420"
+                Visibility="Collapsed" />
+        </Grid>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
             <Button Content="Load" Style="{ThemeResource AccentButtonStyle}" Click="LoadButton_Click" />
             <Button Content="Open XML" Click="OpenXmlButton_Click" />
             <Button Content="Import XML" Click="ImportXmlButton_Click" />
+            <Button Content="Import History" Click="ImportHistoryButton_Click" />
+            <Button Content="Export History" Click="ExportHistoryButton_Click" />
             <Button Content="Delete" Click="DeleteButton_Click" />
             <Button x:Name="PersistScanButton" Content="Save Scan" Click="PersistScanButton_Click" />
             <Button Content="Clear All" Click="ClearButton_Click" />

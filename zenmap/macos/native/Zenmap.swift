@@ -211,7 +211,7 @@ struct ContentView: View {
     @AppStorage("Zenmap.StatsEveryValue") var statsEveryValue = "5s"
     @AppStorage("Zenmap.SaveScansByDefault") var saveScansByDefault = true
     @AppStorage("Zenmap.DefaultTarget") var defaultTarget = "scanme.nmap.org"
-    @AppStorage("Zenmap.DefaultProfileName") var defaultProfileName = "Service Detection"
+    @AppStorage("Zenmap.DefaultProfileName") var defaultProfileName = "Quick Scan"
 
     @State var profiles: [ScanProfile] = Self.builtInProfiles
     
@@ -275,14 +275,14 @@ struct ContentView: View {
     init() {
         let savedCustomProfiles = Self.loadSavedCustomProfiles() ?? []
         let allProfiles = Self.builtInProfiles + savedCustomProfiles
-        let savedDefaultProfileName = UserDefaults.standard.string(forKey: "Zenmap.DefaultProfileName") ?? "Service Detection"
+        let savedDefaultProfileName = UserDefaults.standard.string(forKey: "Zenmap.DefaultProfileName") ?? "Quick Scan"
         let defaultProfile = allProfiles.first { $0.name == savedDefaultProfileName }
-            ?? allProfiles.first { $0.name == "Service Detection" }
+            ?? allProfiles.first { $0.name == "Quick Scan" }
             ?? allProfiles.first
             ?? ScanProfile(
-                name: "Service Detection",
-                arguments: "-sV",
-                description: "Detect service and version information."
+                name: "Quick Scan",
+                arguments: "-T4 -F",
+                description: "Fast scan of common ports."
             )
 
         _profiles = State(initialValue: allProfiles)

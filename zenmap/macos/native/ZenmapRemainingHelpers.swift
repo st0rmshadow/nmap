@@ -118,7 +118,7 @@ extension ContentView {
         statsEveryValue = "5s"
         saveScansByDefault = true
         defaultTarget = "scanme.nmap.org"
-        defaultProfileName = "Service Detection"
+        defaultProfileName = "Quick Scan"
         applyScanDefaults()
     }
 

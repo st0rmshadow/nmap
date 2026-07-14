@@ -50,7 +50,11 @@ final class ScanHistoryStore: ObservableObject {
 
         let scan = savedScans[index]
         guard FileManager.default.fileExists(atPath: scan.xmlPath),
-              let destinationPath = copyXMLToSavedScansDirectory(sourcePath: scan.xmlPath, title: scan.title) else {
+              let destinationPath = copyXMLToSavedScansDirectory(
+                  sourcePath: scan.xmlPath,
+                  title: scan.title,
+                  date: scan.scannedAt
+              ) else {
             return false
         }
 
@@ -146,7 +150,7 @@ final class ScanHistoryStore: ObservableObject {
         UserDefaults.standard.set(data, forKey: Self.savedScansDefaultsKey)
     }
 
-    private func copyXMLToSavedScansDirectory(sourcePath: String, title: String) -> String? {
+    private func copyXMLToSavedScansDirectory(sourcePath: String, title: String, date: Date) -> String? {
         let sourceURL = URL(fileURLWithPath: sourcePath)
 
         guard FileManager.default.fileExists(atPath: sourceURL.path),
@@ -160,7 +164,7 @@ final class ScanHistoryStore: ObservableObject {
                 withIntermediateDirectories: true
             )
 
-            let filename = savedScanFilename(title: title, date: Date())
+            let filename = savedScanFilename(title: title, date: date)
             let destinationURL = savedScansDirectory.appendingPathComponent(filename)
 
             if FileManager.default.fileExists(atPath: destinationURL.path) {

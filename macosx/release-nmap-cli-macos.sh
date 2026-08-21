@@ -151,9 +151,19 @@ rewrite_dependency() {
   local binary_path="$1"
   local old_path="$2"
   local new_path="$3"
+  local found
 
   if otool -L "$binary_path" | grep -Fq "$old_path"; then
     install_name_tool -change "$old_path" "$new_path" "$binary_path"
+    return 0
+  fi
+
+  # Homebrew records Cellar paths (e.g. .../Cellar/openssl@3/3.6.3/lib/libcrypto.3.dylib)
+  # while brew --prefix yields the opt symlink. Match by basename so upgrades do not
+  # leave bundled libssl pointing at a deleted Cellar version.
+  found="$(otool -L "$binary_path" | awk -v lib="$(basename "$old_path")" '$1 ~ ("/" lib "$") { print $1; exit }')"
+  if [ -n "${found:-}" ] && [ "$found" != "$new_path" ]; then
+    install_name_tool -change "$found" "$new_path" "$binary_path"
   fi
 }
 
@@ -181,9 +191,11 @@ echo
 echo "Verifying current-installer-style CLI bundle..."
 "$NMAP_BIN" --version
 otool -L "$NMAP_BIN"
+otool -L "$SSL_BUNDLED" "$CRYPTO_BUNDLED" "$SSH2_BUNDLED"
 
-if otool -L "$NMAP_BIN" | grep -q "/opt/homebrew"; then
+if otool -L "$NMAP_BIN" "$SSL_BUNDLED" "$CRYPTO_BUNDLED" "$SSH2_BUNDLED" | grep -q "/opt/homebrew"; then
   echo "error: CLI bundle still references Homebrew dylibs" >&2
+  otool -L "$NMAP_BIN" "$SSL_BUNDLED" "$CRYPTO_BUNDLED" "$SSH2_BUNDLED" >&2
   exit 1
 fi
 

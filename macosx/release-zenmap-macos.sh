@@ -63,8 +63,9 @@ fi
 NMAPDIR="$NMAP_SHARE" "$NMAP_BIN" --datadir "$NMAP_SHARE" --version
 otool -L "$NMAP_BIN"
 
-if otool -L "$NMAP_BIN" | grep -q "/opt/homebrew"; then
+if otool -L "$NMAP_BIN" "$DIST_DIR/$APP_NAME/Contents/Frameworks/"*.dylib 2>/dev/null | grep -q "/opt/homebrew"; then
   echo "error: copied app still references Homebrew dylibs" >&2
+  otool -L "$NMAP_BIN" "$DIST_DIR/$APP_NAME/Contents/Frameworks/"*.dylib >&2
   exit 1
 fi
 
